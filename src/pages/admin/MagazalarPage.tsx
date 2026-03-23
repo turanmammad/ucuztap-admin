@@ -71,13 +71,14 @@ const planColor: Record<string, string> = {
   Premium: "bg-admin-accent/15 text-admin-accent",
 };
 
-function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock }: {
+function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, onEdit }: {
   shop: Shop | null;
   open: boolean;
   onClose: () => void;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
   onBlock: (id: number) => void;
+  onEdit: (shop: Shop) => void;
 }) {
   if (!shop) return null;
 

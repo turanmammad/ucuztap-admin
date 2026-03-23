@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 const pathLabels: Record<string, string> = {
   "/": "Dashboard",
   "/elanlar": "Elanlar",
+  "/magazalar": "Mağazalar",
   "/istifadeciler": "İstifadəçilər",
   "/kateqoriyalar": "Kateqoriyalar",
   "/lokasiyalar": "Lokasiyalar",

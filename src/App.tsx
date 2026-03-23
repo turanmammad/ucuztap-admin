@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import DashboardPage from "@/pages/admin/DashboardPage";
 import ElanlarPage from "@/pages/admin/ElanlarPage";
+import MagazalarPage from "@/pages/admin/MagazalarPage";
 import IstifadecilerPage from "@/pages/admin/IstifadecilerPage";
 import KateqoriyalarPage from "@/pages/admin/KateqoriyalarPage";
 import LokasiyalarPage from "@/pages/admin/LokasiyalarPage";
@@ -30,6 +31,7 @@ const App = () => (
           <Route element={<AdminLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/elanlar" element={<ElanlarPage />} />
+            <Route path="/magazalar" element={<MagazalarPage />} />
             <Route path="/istifadeciler" element={<IstifadecilerPage />} />
             <Route path="/kateqoriyalar" element={<KateqoriyalarPage />} />
             <Route path="/lokasiyalar" element={<LokasiyalarPage />} />

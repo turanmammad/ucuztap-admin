@@ -338,7 +338,7 @@ export default function ElanlarPage() {
               <SelectItem value="silinmis">Silinmiş ({ads.filter((a) => a.status === "silinmis").length})</SelectItem>
             </SelectContent>
           </Select>
-          <Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Kateqoriya" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Hamısı</SelectItem>

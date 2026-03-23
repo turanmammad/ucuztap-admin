@@ -85,6 +85,13 @@ function SlotEditDialog({ slot, open, onClose, onSave }: {
   onSave: (slot: BannerSlot) => void;
 }) {
   const [data, setData] = useState<BannerSlot | null>(slot);
+  // Sync with prop
+  if (slot && (!data || slot.id !== data.id)) {
+    setData(slot);
+  }
+  if (!slot && data) {
+    setData(null);
+  }
   if (!data) return null;
 
   return (

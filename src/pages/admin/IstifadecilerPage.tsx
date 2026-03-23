@@ -307,7 +307,7 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
                 <Mail size={14} className="mr-1" /> Mesaj göndər
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={() => handleEditUser(user.id)}><Edit size={14} className="mr-1" /> Redaktə</Button>
+            <Button size="sm" variant="outline" onClick={() => onEdit(user.id)}><Edit size={14} className="mr-1" /> Redaktə</Button>
             {user.status === "aktiv" ? (
               <Button size="sm" variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => onBlock(user.id)}>
                 <Ban size={14} className="mr-1" /> Blokla

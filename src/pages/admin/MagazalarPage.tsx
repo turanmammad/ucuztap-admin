@@ -204,6 +204,10 @@ export default function MagazalarPage() {
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
+    if (planFilter !== "all") {
+      const planMap: Record<string, string> = { free: "Pulsuz", business: "Biznes", premium: "Premium" };
+      if (s.plan !== planMap[planFilter]) return false;
+    }
     if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase()) && !s.owner.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });

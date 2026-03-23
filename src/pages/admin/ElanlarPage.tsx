@@ -395,8 +395,56 @@ export default function ElanlarPage() {
         {filteredAds.length} nəticə tapıldı
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-lg border border-border overflow-x-auto -mx-4 sm:mx-0">
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-2">
+        {filteredAds.map((ad) => (
+          <div
+            key={ad.id}
+            onClick={() => setDetailAd(ad)}
+            className={`bg-card rounded-lg border border-border p-3 cursor-pointer active:bg-muted/30 transition-colors ${ad.status === "gozlemede" ? "border-admin-warning/30" : ""}`}
+          >
+            <div className="flex items-start gap-3">
+              <input type="checkbox" checked={selected.includes(ad.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(ad.id); }} className="rounded mt-1 shrink-0" onClick={(e) => e.stopPropagation()} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium truncate">{ad.title}</span>
+                  <StatusBadge status={ad.status} />
+                </div>
+                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                  <span>{ad.user}</span>
+                  <span>•</span>
+                  <span>{ad.category}</span>
+                  <span>•</span>
+                  <span className="font-medium text-foreground">{ad.price.toLocaleString()}₼</span>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <span>👁️ {ad.views > 999 ? `${(ad.views/1000).toFixed(0)}K` : ad.views}</span>
+                    <span>{ad.date.split(" ")[0]}</span>
+                    {ad.aiFlag && <span className="text-admin-warning font-medium">⚠️AI</span>}
+                    {ad.featured && <span className="text-admin-accent">⭐</span>}
+                  </div>
+                  <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
+                    {ad.status === "gozlemede" && (
+                      <>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-success" onClick={() => handleApprove(ad.id)}><Check size={14} /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => handleReject(ad.id, "Rədd edildi")}><X size={14} /></Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => {
+                      setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, status: "silinmis" as const } : a));
+                      toast({ title: "🗑️ Silindi" });
+                    }}><Trash2 size={14} /></Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-card rounded-lg border border-border overflow-x-auto">
         <table className="w-full text-sm" style={{ minWidth: 780 }}>
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30 text-xs">

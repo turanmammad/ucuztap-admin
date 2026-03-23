@@ -247,6 +247,8 @@ export default function ElanlarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState("20");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [editAd, setEditAd] = useState<Ad | null>(null);
 
   const toggleSelect = (id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
 

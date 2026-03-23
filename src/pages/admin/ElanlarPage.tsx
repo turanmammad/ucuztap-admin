@@ -378,22 +378,22 @@ export default function ElanlarPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-card rounded-lg border border-border overflow-x-auto">
-        <table className="min-w-[900px] w-full text-sm">
+      <div className="bg-card rounded-lg border border-border overflow-x-auto -mx-4 sm:mx-0">
+        <table className="w-full text-sm" style={{ minWidth: 780 }}>
           <thead>
-            <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 w-8">
+            <tr className="border-b border-border text-muted-foreground text-left bg-muted/30 text-xs">
+              <th className="px-2 py-2.5 w-7">
                 <input type="checkbox" checked={selected.length === filteredAds.length && filteredAds.length > 0} onChange={toggleAll} className="rounded" />
               </th>
-              <th className="p-3 font-medium w-[60px]">ID</th>
-              <th className="p-3 font-medium">Başlıq</th>
-              <th className="p-3 font-medium w-[100px]">İstifadəçi</th>
-              <th className="p-3 font-medium w-[90px]">Kateqoriya</th>
-              <th className="p-3 font-medium w-[80px]">Qiymət</th>
-              <th className="p-3 font-medium w-[50px]">👁️</th>
-              <th className="p-3 font-medium w-[80px]">Status</th>
-              <th className="p-3 font-medium w-[90px]">Tarix</th>
-              <th className="p-3 font-medium w-[120px]">Əməliyyat</th>
+              <th className="px-2 py-2.5 font-medium w-12">ID</th>
+              <th className="px-2 py-2.5 font-medium">Başlıq</th>
+              <th className="px-2 py-2.5 font-medium w-20">İstifadəçi</th>
+              <th className="px-2 py-2.5 font-medium w-[72px]">Kateqoriya</th>
+              <th className="px-2 py-2.5 font-medium w-16">Qiymət</th>
+              <th className="px-2 py-2.5 font-medium w-10">👁️</th>
+              <th className="px-2 py-2.5 font-medium w-16">Status</th>
+              <th className="px-2 py-2.5 font-medium w-[72px]">Tarix</th>
+              <th className="px-2 py-2.5 font-medium w-24">Əməliyyat</th>
             </tr>
           </thead>
           <tbody>
@@ -403,51 +403,46 @@ export default function ElanlarPage() {
                 className={`border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer ${ad.status === "gozlemede" ? "bg-admin-warning/[0.02]" : ""}`}
                 onClick={() => setDetailAd(ad)}
               >
-                <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={selected.includes(ad.id)} onChange={() => toggleSelect(ad.id)} className="rounded" />
                 </td>
-                <td className="p-3 text-muted-foreground text-xs">#{ad.id}</td>
-                <td className="p-3">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-7 h-7 bg-muted rounded shrink-0" />
+                <td className="px-2 py-2 text-muted-foreground text-[11px]">#{ad.id}</td>
+                <td className="px-2 py-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <div className="w-6 h-6 bg-muted rounded shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <span className="font-medium text-xs block truncate">{ad.title}</span>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {ad.featured && <span className="text-[9px] bg-admin-accent/15 text-admin-accent px-1 rounded">⭐ VIP</span>}
+                      <span className="font-medium text-xs block truncate max-w-[180px]">{ad.title}</span>
+                      <div className="flex items-center gap-1">
+                        {ad.featured && <span className="text-[8px] bg-admin-accent/15 text-admin-accent px-0.5 rounded">⭐</span>}
                         {ad.aiFlag && (
-                          <span className="text-[9px] bg-admin-warning/10 text-admin-warning px-1 py-0.5 rounded font-medium flex items-center gap-0.5">
-                            <Bot size={9} /> Şübhəli
-                          </span>
+                          <span className="text-[8px] bg-admin-warning/10 text-admin-warning px-0.5 rounded font-medium">⚠️AI</span>
                         )}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="p-3">
-                  <div className="flex items-center gap-1">
-                    <div className="w-5 h-5 rounded-full bg-admin-accent/20 flex items-center justify-center text-[9px] font-bold shrink-0">{ad.user[0]}</div>
-                    <span className="text-xs truncate max-w-[80px]">{ad.user}</span>
-                  </div>
+                <td className="px-2 py-2">
+                  <span className="text-[11px] truncate block max-w-[75px]">{ad.user}</span>
                 </td>
-                <td className="p-3 text-muted-foreground text-xs">{ad.category}</td>
-                <td className="p-3 font-medium tabular-nums text-xs">{ad.price.toLocaleString()} ₼</td>
-                <td className="p-3 text-muted-foreground tabular-nums text-xs">{ad.views.toLocaleString()}</td>
-                <td className="p-3"><StatusBadge status={ad.status} /></td>
-                <td className="p-3 text-muted-foreground text-[11px] whitespace-nowrap">{ad.date}</td>
-                <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailAd(ad)}><Eye size={12} /></Button>
+                <td className="px-2 py-2 text-muted-foreground text-[11px]">{ad.category}</td>
+                <td className="px-2 py-2 font-medium tabular-nums text-[11px]">{ad.price.toLocaleString()}₼</td>
+                <td className="px-2 py-2 text-muted-foreground tabular-nums text-[11px]">{ad.views > 999 ? `${(ad.views/1000).toFixed(0)}K` : ad.views}</td>
+                <td className="px-2 py-2"><StatusBadge status={ad.status} /></td>
+                <td className="px-2 py-2 text-muted-foreground text-[10px] whitespace-nowrap">{ad.date}</td>
+                <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex gap-px">
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailAd(ad)}><Eye size={11} /></Button>
                     {ad.status === "gozlemede" && (
                       <>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-success" onClick={() => handleApprove(ad.id)}><Check size={12} /></Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => handleReject(ad.id, "Admin tərəfindən rədd edildi")}><X size={12} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-success" onClick={() => handleApprove(ad.id)}><Check size={11} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => handleReject(ad.id, "Admin tərəfindən rədd edildi")}><X size={11} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={11} /></Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => {
                       setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, status: "silinmis" as const } : a));
                       toast({ title: "🗑️ Silindi", description: `Elan #${ad.id} silindi` });
-                    }}><Trash2 size={12} /></Button>
+                    }}><Trash2 size={11} /></Button>
                   </div>
                 </td>
               </tr>

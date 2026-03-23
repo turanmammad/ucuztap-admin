@@ -444,7 +444,7 @@ export default function ElanlarPage() {
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => handleReject(ad.id, "Admin tərəfindən rədd edildi")}><X size={11} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={11} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailAd(ad)}><Edit size={11} /></Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => {
                       setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, status: "silinmis" as const } : a));
                       toast({ title: "🗑️ Silindi", description: `Elan #${ad.id} silindi` });

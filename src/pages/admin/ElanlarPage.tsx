@@ -379,21 +379,21 @@ export default function ElanlarPage() {
 
       {/* Table */}
       <div className="bg-card rounded-lg border border-border overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="min-w-[900px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 w-10">
+              <th className="p-3 w-8">
                 <input type="checkbox" checked={selected.length === filteredAds.length && filteredAds.length > 0} onChange={toggleAll} className="rounded" />
               </th>
-              <th className="p-3 font-medium">ID</th>
+              <th className="p-3 font-medium w-[60px]">ID</th>
               <th className="p-3 font-medium">Başlıq</th>
-              <th className="p-3 font-medium">İstifadəçi</th>
-              <th className="p-3 font-medium">Kateqoriya</th>
-              <th className="p-3 font-medium">Qiymət</th>
-              <th className="p-3 font-medium">👁️</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Tarix</th>
-              <th className="p-3 font-medium">Əməliyyat</th>
+              <th className="p-3 font-medium w-[100px]">İstifadəçi</th>
+              <th className="p-3 font-medium w-[90px]">Kateqoriya</th>
+              <th className="p-3 font-medium w-[80px]">Qiymət</th>
+              <th className="p-3 font-medium w-[50px]">👁️</th>
+              <th className="p-3 font-medium w-[80px]">Status</th>
+              <th className="p-3 font-medium w-[90px]">Tarix</th>
+              <th className="p-3 font-medium w-[120px]">Əməliyyat</th>
             </tr>
           </thead>
           <tbody>
@@ -406,46 +406,48 @@ export default function ElanlarPage() {
                 <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <input type="checkbox" checked={selected.includes(ad.id)} onChange={() => toggleSelect(ad.id)} className="rounded" />
                 </td>
-                <td className="p-3 text-muted-foreground">#{ad.id}</td>
-                <td className="p-3 font-medium">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-muted rounded shrink-0" />
-                    <div className="min-w-0">
-                      <span className="truncate max-w-[200px] block">{ad.title}</span>
-                      {ad.featured && <span className="text-[10px] bg-admin-accent/15 text-admin-accent px-1 rounded">⭐ Önə çıxarılıb</span>}
+                <td className="p-3 text-muted-foreground text-xs">#{ad.id}</td>
+                <td className="p-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-7 h-7 bg-muted rounded shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="font-medium text-xs block truncate">{ad.title}</span>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {ad.featured && <span className="text-[9px] bg-admin-accent/15 text-admin-accent px-1 rounded">⭐ VIP</span>}
+                        {ad.aiFlag && (
+                          <span className="text-[9px] bg-admin-warning/10 text-admin-warning px-1 py-0.5 rounded font-medium flex items-center gap-0.5">
+                            <Bot size={9} /> Şübhəli
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    {ad.aiFlag && (
-                      <span className="text-[10px] bg-admin-warning/10 text-admin-warning px-1.5 py-0.5 rounded font-medium flex items-center gap-0.5 shrink-0">
-                        <Bot size={10} /> Şübhəli
-                      </span>
-                    )}
                   </div>
                 </td>
                 <td className="p-3">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-admin-accent/20 flex items-center justify-center text-[10px] font-bold">{ad.user[0]}</div>
-                    <span className="text-xs">{ad.user}</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-5 h-5 rounded-full bg-admin-accent/20 flex items-center justify-center text-[9px] font-bold shrink-0">{ad.user[0]}</div>
+                    <span className="text-xs truncate max-w-[80px]">{ad.user}</span>
                   </div>
                 </td>
                 <td className="p-3 text-muted-foreground text-xs">{ad.category}</td>
-                <td className="p-3 font-medium tabular-nums">{ad.price.toLocaleString()} ₼</td>
+                <td className="p-3 font-medium tabular-nums text-xs">{ad.price.toLocaleString()} ₼</td>
                 <td className="p-3 text-muted-foreground tabular-nums text-xs">{ad.views.toLocaleString()}</td>
                 <td className="p-3"><StatusBadge status={ad.status} /></td>
-                <td className="p-3 text-muted-foreground text-xs whitespace-nowrap">{ad.date}</td>
+                <td className="p-3 text-muted-foreground text-[11px] whitespace-nowrap">{ad.date}</td>
                 <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailAd(ad)}><Eye size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailAd(ad)}><Eye size={12} /></Button>
                     {ad.status === "gozlemede" && (
                       <>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-success" onClick={() => handleApprove(ad.id)}><Check size={13} /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => handleReject(ad.id, "Admin tərəfindən rədd edildi")}><X size={13} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-success" onClick={() => handleApprove(ad.id)}><Check size={12} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => handleReject(ad.id, "Admin tərəfindən rədd edildi")}><X size={12} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><Edit size={13} /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => {
+                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => {
                       setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, status: "silinmis" as const } : a));
                       toast({ title: "🗑️ Silindi", description: `Elan #${ad.id} silindi` });
-                    }}><Trash2 size={13} /></Button>
+                    }}><Trash2 size={12} /></Button>
                   </div>
                 </td>
               </tr>

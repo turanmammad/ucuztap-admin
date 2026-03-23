@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { FileText, BarChart3, Users, Clock, Check, X, Eye } from "lucide-react";
+import { FileText, BarChart3, Users, Clock, Check, X, Eye, Activity, CheckCircle2, AlertTriangle, Shield } from "lucide-react";
 import { KpiCard } from "@/components/admin/KpiCard";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,

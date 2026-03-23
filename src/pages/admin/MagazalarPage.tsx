@@ -197,6 +197,8 @@ export default function MagazalarPage() {
   const [detailShop, setDetailShop] = useState<Shop | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
+  const [editShop, setEditShop] = useState<Shop | null>(null);
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
@@ -220,6 +222,54 @@ export default function MagazalarPage() {
     setShops((prev) => prev.map((s) => s.id === id ? { ...s, status: "bloklanmis" as const } : s));
     setDetailShop(null);
     toast({ title: "🚫 Mağaza bloklandı", description: `Mağaza #${id} bloklandı` });
+  };
+
+  const handleCreate = (data: any) => {
+    const newShop: Shop = {
+      id: 3000 + shops.length + Math.floor(Math.random() * 100),
+      name: data.name,
+      owner: "Admin User",
+      ownerEmail: data.email || "admin@ucuztap.az",
+      ownerPhone: data.phone || "+994 50 000 00 00",
+      category: data.category,
+      location: data.location || "Bakı",
+      address: data.address || "",
+      status: "aktiv",
+      adsCount: 0,
+      rating: 0,
+      reviews: 0,
+      website: data.website || undefined,
+      description: data.description,
+      joinDate: new Date().toISOString().split("T")[0],
+      logo: data.logoPreview || "",
+      verified: true,
+      plan: (data.plan || "Pulsuz") as Shop["plan"],
+      monthlyViews: 0,
+    };
+    setShops((prev) => [newShop, ...prev]);
+    setFormOpen(false);
+    toast({ title: "✅ Mağaza yaradıldı", description: `"${data.name}" uğurla yaradıldı` });
+  };
+
+  const handleEdit = (data: any) => {
+    if (!editShop) return;
+    setShops((prev) => prev.map((s) => s.id === editShop.id ? {
+      ...s,
+      name: data.name || s.name,
+      category: data.category || s.category,
+      location: data.location || s.location,
+      address: data.address || s.address,
+      description: data.description || s.description,
+      website: data.website || s.website,
+      plan: (data.plan || s.plan) as Shop["plan"],
+    } : s));
+    setEditShop(null);
+    toast({ title: "✅ Mağaza yeniləndi", description: `"${data.name}" uğurla yeniləndi` });
+  };
+
+  const openEdit = (shop: Shop) => {
+    setDetailShop(null);
+    setEditShop(shop);
   };
 
   const pendingCount = shops.filter((s) => s.status === "gozlemede").length;

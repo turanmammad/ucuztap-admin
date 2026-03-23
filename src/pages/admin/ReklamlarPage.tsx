@@ -337,24 +337,39 @@ export default function ReklamlarPage() {
   };
 
   const handleBannerCreate = (data: Partial<Banner>) => {
-    const newBanner: Banner = {
-      id: banners.length + 100,
-      title: data.title || "",
-      advertiser: data.advertiser || "",
-      slotId: data.slotId || "",
-      imageUrl: "",
-      targetUrl: data.targetUrl || "",
-      startDate: data.startDate || "",
-      endDate: data.endDate || "",
-      status: "gozlemede",
-      impressions: 0,
-      clicks: 0,
-      ctr: 0,
-      revenue: 0,
-      aiGenerated: false,
-    };
-    setBanners(prev => [newBanner, ...prev]);
-    toast({ title: "✅ Banner yaradıldı", description: `"${data.title}" əlavə edildi` });
+    if (editBanner) {
+      // Edit mode
+      setBanners(prev => prev.map(b => b.id === editBanner.id ? {
+        ...b,
+        title: data.title || b.title,
+        advertiser: data.advertiser || b.advertiser,
+        slotId: data.slotId || b.slotId,
+        targetUrl: data.targetUrl || b.targetUrl,
+        startDate: data.startDate || b.startDate,
+        endDate: data.endDate || b.endDate,
+      } : b));
+      setEditBanner(null);
+      toast({ title: "✅ Banner yeniləndi", description: `"${data.title}" redaktə edildi` });
+    } else {
+      const newBanner: Banner = {
+        id: banners.length + 100 + Math.floor(Math.random() * 1000),
+        title: data.title || "",
+        advertiser: data.advertiser || "",
+        slotId: data.slotId || "",
+        imageUrl: "",
+        targetUrl: data.targetUrl || "",
+        startDate: data.startDate || "",
+        endDate: data.endDate || "",
+        status: "gozlemede",
+        impressions: 0,
+        clicks: 0,
+        ctr: 0,
+        revenue: 0,
+        aiGenerated: false,
+      };
+      setBanners(prev => [newBanner, ...prev]);
+      toast({ title: "✅ Banner yaradıldı", description: `"${data.title}" əlavə edildi` });
+    }
   };
 
   const handleAiGenerate = (data: any) => {

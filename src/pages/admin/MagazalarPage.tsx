@@ -200,6 +200,7 @@ export default function MagazalarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editShop, setEditShop] = useState<Shop | null>(null);
+  const [planFilter, setPlanFilter] = useState("all");
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;

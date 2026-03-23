@@ -10,6 +10,7 @@ import { useState } from "react";
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
   { label: "Elanlar", icon: FileText, path: "/elanlar" },
+  { label: "Mağazalar", icon: Store, path: "/magazalar" },
   { label: "İstifadəçilər", icon: Users, path: "/istifadeciler" },
   { label: "Kateqoriyalar", icon: FolderTree, path: "/kateqoriyalar" },
   { label: "Lokasiyalar", icon: MapPin, path: "/lokasiyalar" },

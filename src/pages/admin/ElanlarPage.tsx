@@ -254,6 +254,10 @@ export default function ElanlarPage() {
 
   const filteredAds = ads.filter((ad) => {
     if (statusFilter !== "all" && ad.status !== statusFilter) return false;
+    if (categoryFilter !== "all") {
+      const catMap: Record<string, string> = { transport: "Nəqliyyat", realestate: "Daşınmaz əmlak", electronics: "Elektronika", evbag: "Ev və bağ" };
+      if (ad.category !== catMap[categoryFilter]) return false;
+    }
     if (searchQuery && !ad.title.toLowerCase().includes(searchQuery.toLowerCase()) && !ad.user.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });

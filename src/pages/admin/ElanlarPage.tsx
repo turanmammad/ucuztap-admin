@@ -228,12 +228,14 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject }: {
               >
                 <X size={16} className="mr-1" /> Rədd et
               </Button>
-              <Button variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5">
-                <Trash2 size={16} className="mr-1" /> Sil
-              </Button>
-            </div>
-          )}
-        </div>
+              <Button variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => {
+                onReject(ad.id, "Elan admin tərəfindən silindi");
+              }}>
+                 <Trash2 size={16} className="mr-1" /> Sil
+               </Button>
+             </div>
+           )}
+         </div>
       </DialogContent>
     </Dialog>
   );
@@ -247,11 +249,17 @@ export default function ElanlarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState("20");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [editAd, setEditAd] = useState<Ad | null>(null);
 
   const toggleSelect = (id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
 
   const filteredAds = ads.filter((ad) => {
     if (statusFilter !== "all" && ad.status !== statusFilter) return false;
+    if (categoryFilter !== "all") {
+      const catMap: Record<string, string> = { transport: "Nəqliyyat", realestate: "Daşınmaz əmlak", electronics: "Elektronika", evbag: "Ev və bağ" };
+      if (ad.category !== catMap[categoryFilter]) return false;
+    }
     if (searchQuery && !ad.title.toLowerCase().includes(searchQuery.toLowerCase()) && !ad.user.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
@@ -332,7 +340,7 @@ export default function ElanlarPage() {
               <SelectItem value="silinmis">Silinmiş ({ads.filter((a) => a.status === "silinmis").length})</SelectItem>
             </SelectContent>
           </Select>
-          <Select>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Kateqoriya" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Hamısı</SelectItem>
@@ -345,8 +353,8 @@ export default function ElanlarPage() {
           <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
             <Search size={14} className="mr-1" /> Axtar
           </Button>
-          {statusFilter !== "all" && (
-            <Button size="sm" variant="ghost" onClick={() => setStatusFilter("all")} className="text-xs">
+          {(statusFilter !== "all" || categoryFilter !== "all") && (
+            <Button size="sm" variant="ghost" onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }} className="text-xs">
               <X size={12} className="mr-1" /> Filtri sıfırla
             </Button>
           )}
@@ -438,7 +446,7 @@ export default function ElanlarPage() {
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => handleReject(ad.id, "Admin tərəfindən rədd edildi")}><X size={11} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={11} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailAd(ad)}><Edit size={11} /></Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => {
                       setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, status: "silinmis" as const } : a));
                       toast({ title: "🗑️ Silindi", description: `Elan #${ad.id} silindi` });

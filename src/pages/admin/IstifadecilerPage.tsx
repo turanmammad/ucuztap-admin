@@ -75,12 +75,13 @@ const roleColor: Record<string, string> = {
 
 const profileTabs = ["Ümumi", "Elanlar", "Ödənişlər", "Aktivlik"];
 
-function UserDetailDialog({ user, open, onClose, onBlock, onUnblock }: {
+function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
   user: User | null;
   open: boolean;
   onClose: () => void;
   onBlock: (id: number) => void;
   onUnblock: (id: number) => void;
+  onEdit: (id: number) => void;
 }) {
   const [tab, setTab] = useState(0);
   const [msgMode, setMsgMode] = useState(false);
@@ -306,7 +307,7 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock }: {
                 <Mail size={14} className="mr-1" /> Mesaj göndər
               </Button>
             )}
-            <Button size="sm" variant="outline"><Edit size={14} className="mr-1" /> Redaktə</Button>
+            <Button size="sm" variant="outline" onClick={() => onEdit(user.id)}><Edit size={14} className="mr-1" /> Redaktə</Button>
             {user.status === "aktiv" ? (
               <Button size="sm" variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => onBlock(user.id)}>
                 <Ban size={14} className="mr-1" /> Blokla
@@ -329,6 +330,8 @@ export default function IstifadecilerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editUserId, setEditUserId] = useState<number | null>(null);
+  const [editRole, setEditRole] = useState("");
 
   const filtered = users.filter((u) => {
     if (roleFilter !== "all") {
@@ -353,6 +356,20 @@ export default function IstifadecilerPage() {
     setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "aktiv" as const } : u));
     setDetailUser(null);
     toast({ title: "✅ Blok açıldı", description: `İstifadəçi #${id} aktivləşdirildi` });
+  };
+
+  const handleEditUser = (userId: number) => {
+    setEditUserId(userId);
+    const user = users.find(u => u.id === userId);
+    if (user) setEditRole(user.role);
+  };
+
+  const handleSaveEdit = () => {
+    if (editUserId === null) return;
+    setUsers(prev => prev.map(u => u.id === editUserId ? { ...u, role: editRole as User["role"] } : u));
+    toast({ title: "✅ İstifadəçi yeniləndi", description: `#${editUserId} rolu "${editRole}" olaraq dəyişdirildi` });
+    setEditUserId(null);
+    setDetailUser(null);
   };
 
   return (
@@ -451,7 +468,7 @@ export default function IstifadecilerPage() {
                 <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-0.5">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailUser(u)}><Eye size={12} /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditUser(u.id)}><Edit size={12} /></Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}>
                       <Ban size={12} />
                     </Button>
@@ -465,12 +482,31 @@ export default function IstifadecilerPage() {
       </div>
 
       {/* Detail Dialog */}
+      {/* Edit Role Dialog */}
+      <Dialog open={editUserId !== null} onOpenChange={() => setEditUserId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>İstifadəçi rolunu dəyiş</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <Select value={editRole} onValueChange={setEditRole}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="İstifadəçi">İstifadəçi</SelectItem>
+                <SelectItem value="Moderator">Moderator</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button className="w-full bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={handleSaveEdit}>Yadda saxla</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <UserDetailDialog
         user={detailUser}
         open={!!detailUser}
         onClose={() => setDetailUser(null)}
         onBlock={handleBlock}
         onUnblock={handleUnblock}
+        onEdit={handleEditUser}
       />
     </div>
   );

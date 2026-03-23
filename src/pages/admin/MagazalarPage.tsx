@@ -200,9 +200,14 @@ export default function MagazalarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editShop, setEditShop] = useState<Shop | null>(null);
+  const [planFilter, setPlanFilter] = useState("all");
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
+    if (planFilter !== "all") {
+      const planMap: Record<string, string> = { free: "Pulsuz", business: "Biznes", premium: "Premium" };
+      if (s.plan !== planMap[planFilter]) return false;
+    }
     if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase()) && !s.owner.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
@@ -335,7 +340,7 @@ export default function MagazalarPage() {
             <SelectItem value="bloklanmis">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        <Select>
+        <Select value={planFilter} onValueChange={setPlanFilter}>
           <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Plan" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Hamısı</SelectItem>
@@ -347,8 +352,8 @@ export default function MagazalarPage() {
         <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
           <Search size={14} className="mr-1" /> Axtar
         </Button>
-        {statusFilter !== "all" && (
-          <Button size="sm" variant="ghost" onClick={() => setStatusFilter("all")} className="text-xs">
+        {(statusFilter !== "all" || planFilter !== "all" || searchQuery) && (
+          <Button size="sm" variant="ghost" onClick={() => { setStatusFilter("all"); setPlanFilter("all"); setSearchQuery(""); }} className="text-xs">
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}

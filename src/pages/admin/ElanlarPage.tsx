@@ -96,7 +96,7 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject }: {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <span>Elan #{ad.id}</span>

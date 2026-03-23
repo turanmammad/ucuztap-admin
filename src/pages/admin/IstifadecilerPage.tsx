@@ -1,18 +1,70 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Eye, Edit, Ban, Mail, Search } from "lucide-react";
+import { Eye, Edit, Ban, Mail, Search, X, Phone, Calendar, MapPin, CreditCard, FileText, Clock, Shield, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
-const users = Array.from({ length: 15 }, (_, i) => ({
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  ads: number;
+  date: string;
+  role: "İstifadəçi" | "Moderator" | "Admin";
+  status: "aktiv" | "bloklanmis";
+  location: string;
+  lastActive: string;
+  totalSpent: number;
+  verified: boolean;
+  bio: string;
+  userAds: { id: number; title: string; status: "aktiv" | "gozlemede" | "redd" | "silinmis" | "vip"; date: string; price: number; views: number }[];
+  payments: { id: number; amount: number; service: string; status: "odenlib" | "gozleyir" | "legv" | "qaytarilib"; date: string }[];
+  activity: { action: string; detail: string; date: string }[];
+}
+
+const mockUsers: User[] = Array.from({ length: 15 }, (_, i) => ({
   id: 5000 + i,
-  name: ["Əli Məmmədov", "Leyla Həsənova", "Rəşad Kərimov", "Nigar Əliyeva", "Tural İsmayılov"][i % 5],
-  email: ["ali@mail.az", "leyla@gmail.com", "rashad@mail.az", "nigar@yahoo.com", "tural@mail.az"][i % 5],
+  name: ["Əli Məmmədov", "Leyla Həsənova", "Rəşad Kərimov", "Nigar Əliyeva", "Tural İsmayılov", "Günel Əhmədova", "Orxan Babayev", "Səbinə İsmayılova"][i % 8],
+  email: ["ali@mail.az", "leyla@gmail.com", "rashad@mail.az", "nigar@yahoo.com", "tural@mail.az", "gunel@gmail.com", "orxan@mail.az", "sebine@yahoo.com"][i % 8],
   phone: "+994 50 " + String(100 + i * 11) + " " + String(20 + i * 7).padStart(2, "0") + " " + String(30 + i * 3).padStart(2, "0"),
-  ads: Math.floor(Math.random() * 50),
-  date: "2026-0" + (1 + (i % 3)) + "-" + String(10 + i).padStart(2, "0"),
-  role: (["İstifadəçi", "İstifadəçi", "Moderator", "İstifadəçi", "Admin"] as const)[i % 5],
+  ads: Math.floor(3 + Math.random() * 50),
+  date: "2025-" + String(1 + (i % 12)).padStart(2, "0") + "-" + String(5 + (i % 20)).padStart(2, "0"),
+  role: (["İstifadəçi", "İstifadəçi", "Moderator", "İstifadəçi", "Admin", "İstifadəçi", "İstifadəçi", "Moderator"] as const)[i % 8],
   status: i % 8 === 0 ? "bloklanmis" as const : "aktiv" as const,
+  location: ["Bakı, Nəsimi", "Bakı, Yasamal", "Bakı, Səbail", "Sumqayıt", "Gəncə", "Bakı, Xətai"][i % 6],
+  lastActive: ["Bu gün, 14:23", "Bu gün, 11:05", "Dünən, 22:30", "3 gün əvvəl", "Bu gün, 09:15", "1 həftə əvvəl"][i % 6],
+  totalSpent: Math.floor(Math.random() * 200),
+  verified: i % 3 !== 2,
+  bio: ["Avtomobil həvəskarı", "Daşınmaz əmlak agenti", "Elektronika satıcısı", "Freelancer", "Kiçik biznes sahibi", ""][i % 6],
+  userAds: Array.from({ length: 3 + (i % 4) }, (_, j) => ({
+    id: 10000 + i * 10 + j,
+    title: ["Mercedes C220d, 2019", "3 otaqlı mənzil, Nəsimi", "iPhone 15 Pro Max", "Samsung TV 55\"", "MacBook Pro 14\"", "BMW X5, 2021", "Ofis mebeli dəsti"][j % 7],
+    status: (["aktiv", "gozlemede", "aktiv", "redd", "vip", "aktiv", "silinmis"] as const)[j % 7],
+    date: "2026-03-" + String(23 - j * 2).padStart(2, "0"),
+    price: [25000, 85000, 2800, 1200, 4200, 62000, 800][j % 7],
+    views: Math.floor(20 + Math.random() * 3000),
+  })),
+  payments: Array.from({ length: 2 + (i % 3) }, (_, j) => ({
+    id: 8000 + i * 10 + j,
+    amount: [5, 10, 2, 10, 5][j % 5],
+    service: ["VIP", "Premium", "İrəli", "Premium", "VIP"][j % 5],
+    status: (["odenlib", "odenlib", "gozleyir", "odenlib", "legv"] as const)[j % 5],
+    date: "2026-03-" + String(20 - j * 3).padStart(2, "0"),
+  })),
+  activity: [
+    { action: "Elan əlavə etdi", detail: `Elan #${10000 + i * 10}`, date: "2026-03-23 14:23" },
+    { action: "Profili yenilədi", detail: "Telefon nömrəsi dəyişdi", date: "2026-03-22 11:05" },
+    { action: "Elan redaktə etdi", detail: `Elan #${10000 + i * 10 + 1} — qiyməti dəyişdi`, date: "2026-03-21 09:30" },
+    { action: "VIP aktivləşdirdi", detail: `Elan #${10000 + i * 10} — 5 ₼`, date: "2026-03-20 16:45" },
+    { action: "Giriş etdi", detail: "IP: 185.129.xx.xx", date: "2026-03-19 08:12" },
+    { action: "Şikayət aldı", detail: "Elan #" + (10000 + i * 10 + 2) + " — spam şübhəsi", date: "2026-03-18 14:00" },
+  ],
 }));
 
 const roleColor: Record<string, string> = {
@@ -21,12 +73,315 @@ const roleColor: Record<string, string> = {
   Admin: "bg-admin-accent/15 text-admin-accent",
 };
 
+const profileTabs = ["Ümumi", "Elanlar", "Ödənişlər", "Aktivlik"];
+
+function UserDetailDialog({ user, open, onClose, onBlock, onUnblock }: {
+  user: User | null;
+  open: boolean;
+  onClose: () => void;
+  onBlock: (id: number) => void;
+  onUnblock: (id: number) => void;
+}) {
+  const [tab, setTab] = useState(0);
+  const [msgMode, setMsgMode] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  if (!user) return null;
+
+  const handleSendMsg = () => {
+    if (!msg.trim()) return;
+    toast({ title: "📧 Mesaj göndərildi", description: `${user.name} — ${msg.slice(0, 50)}...` });
+    setMsg("");
+    setMsgMode(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-3">
+            <span>İstifadəçi #{user.id}</span>
+            <StatusBadge status={user.status} />
+            <span className={`text-xs px-2 py-0.5 rounded font-medium ${roleColor[user.role]}`}>{user.role}</span>
+            {user.verified && <span className="text-xs bg-admin-info/10 text-admin-info px-2 py-0.5 rounded">✓ Təsdiqlənmiş</span>}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {/* Profile header */}
+          <div className="flex gap-4 items-start">
+            <div className="w-16 h-16 rounded-full bg-admin-accent flex items-center justify-center text-xl font-bold text-accent-foreground shrink-0">
+              {user.name[0]}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold">{user.name}</h3>
+              {user.bio && <p className="text-sm text-muted-foreground">{user.bio}</p>}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Mail size={12} /> {user.email}</span>
+                <span className="flex items-center gap-1"><Phone size={12} /> {user.phone}</span>
+                <span className="flex items-center gap-1"><MapPin size={12} /> {user.location}</span>
+                <span className="flex items-center gap-1"><Calendar size={12} /> Qeydiyyat: {user.date}</span>
+                <span className="flex items-center gap-1"><Clock size={12} /> Son aktivlik: {user.lastActive}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-3">
+            {[
+              { label: "Elanlar", value: user.ads, icon: FileText, color: "text-admin-info" },
+              { label: "Xərclənib", value: `${user.totalSpent} ₼`, icon: CreditCard, color: "text-admin-success" },
+              { label: "Baxışlar", value: user.userAds.reduce((s, a) => s + a.views, 0).toLocaleString(), icon: Eye, color: "text-admin-accent" },
+              { label: "Rol", value: user.role, icon: Shield, color: "text-muted-foreground" },
+            ].map((s) => (
+              <div key={s.label} className="bg-muted/30 rounded-lg p-3 text-center">
+                <s.icon size={16} className={cn("mx-auto mb-1", s.color)} />
+                <p className="text-lg font-bold">{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 border-b border-border">
+            {profileTabs.map((t, i) => (
+              <button
+                key={t}
+                onClick={() => setTab(i)}
+                className={cn(
+                  "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
+                  tab === i ? "border-admin-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t}
+                {i === 1 && <span className="ml-1 text-[10px] bg-muted px-1.5 py-0.5 rounded-full">{user.userAds.length}</span>}
+                {i === 2 && <span className="ml-1 text-[10px] bg-muted px-1.5 py-0.5 rounded-full">{user.payments.length}</span>}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab content */}
+          <div className="min-h-[200px]">
+            {/* Ümumi */}
+            {tab === 0 && (
+              <div className="grid grid-cols-2 gap-4 animate-fade-in">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase">Əsas məlumatlar</h4>
+                  {[
+                    { label: "Ad", value: user.name },
+                    { label: "Email", value: user.email },
+                    { label: "Telefon", value: user.phone },
+                    { label: "Lokasiya", value: user.location },
+                    { label: "Qeydiyyat tarixi", value: user.date },
+                    { label: "Son aktivlik", value: user.lastActive },
+                  ].map((f) => (
+                    <div key={f.label} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{f.label}:</span>
+                      <span className="font-medium">{f.value}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase">Statistika</h4>
+                  {[
+                    { label: "Ümumi elanlar", value: user.ads },
+                    { label: "Aktiv elanlar", value: user.userAds.filter((a) => a.status === "aktiv").length },
+                    { label: "Gözləmədə", value: user.userAds.filter((a) => a.status === "gozlemede").length },
+                    { label: "Rədd edilmiş", value: user.userAds.filter((a) => a.status === "redd").length },
+                    { label: "Ümumi xərc", value: `${user.totalSpent} ₼` },
+                    { label: "Ödəniş sayı", value: user.payments.length },
+                  ].map((f) => (
+                    <div key={f.label} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{f.label}:</span>
+                      <span className="font-medium">{String(f.value)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Elanlar */}
+            {tab === 1 && (
+              <div className="animate-fade-in">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground text-left">
+                      <th className="pb-2 font-medium">ID</th>
+                      <th className="pb-2 font-medium">Başlıq</th>
+                      <th className="pb-2 font-medium">Qiymət</th>
+                      <th className="pb-2 font-medium">Baxış</th>
+                      <th className="pb-2 font-medium">Status</th>
+                      <th className="pb-2 font-medium">Tarix</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {user.userAds.map((ad) => (
+                      <tr key={ad.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                        <td className="py-2.5 text-muted-foreground">#{ad.id}</td>
+                        <td className="py-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 bg-muted rounded shrink-0" />
+                            <span className="font-medium text-xs">{ad.title}</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 font-medium tabular-nums text-xs">{ad.price.toLocaleString()} ₼</td>
+                        <td className="py-2.5 text-muted-foreground tabular-nums text-xs">{ad.views.toLocaleString()}</td>
+                        <td className="py-2.5"><StatusBadge status={ad.status} /></td>
+                        <td className="py-2.5 text-muted-foreground text-xs">{ad.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Ödənişlər */}
+            {tab === 2 && (
+              <div className="animate-fade-in">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs text-muted-foreground">
+                    Ümumi xərc: <span className="font-semibold text-foreground">{user.totalSpent} ₼</span>
+                  </p>
+                </div>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-muted-foreground text-left">
+                      <th className="pb-2 font-medium">ID</th>
+                      <th className="pb-2 font-medium">Xidmət</th>
+                      <th className="pb-2 font-medium">Məbləğ</th>
+                      <th className="pb-2 font-medium">Status</th>
+                      <th className="pb-2 font-medium">Tarix</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {user.payments.map((p) => (
+                      <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                        <td className="py-2.5 text-muted-foreground">#{p.id}</td>
+                        <td className="py-2.5 font-medium">{p.service}</td>
+                        <td className="py-2.5 font-medium tabular-nums">{p.amount} ₼</td>
+                        <td className="py-2.5"><StatusBadge status={p.status} /></td>
+                        <td className="py-2.5 text-muted-foreground text-xs">{p.date}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Aktivlik */}
+            {tab === 3 && (
+              <div className="space-y-0 animate-fade-in">
+                {user.activity.map((a, i) => (
+                  <div key={i} className="flex gap-3 py-2.5 border-b border-border/50 last:border-0">
+                    <div className="w-1.5 h-1.5 rounded-full bg-admin-accent mt-2 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{a.action}</p>
+                      <p className="text-xs text-muted-foreground">{a.detail}</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap font-mono">{a.date}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Message box */}
+          {msgMode && (
+            <div className="space-y-2 animate-fade-in border-t border-border pt-3">
+              <h4 className="text-sm font-medium">Mesaj göndər — {user.name}</h4>
+              <Textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Mesajınızı yazın..." rows={3} />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSendMsg} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
+                  <Send size={14} className="mr-1" /> Göndər
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => { setMsgMode(false); setMsg(""); }}>Ləğv</Button>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-2 border-t border-border">
+            {!msgMode && (
+              <Button size="sm" variant="outline" onClick={() => setMsgMode(true)}>
+                <Mail size={14} className="mr-1" /> Mesaj göndər
+              </Button>
+            )}
+            <Button size="sm" variant="outline"><Edit size={14} className="mr-1" /> Redaktə</Button>
+            {user.status === "aktiv" ? (
+              <Button size="sm" variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => onBlock(user.id)}>
+                <Ban size={14} className="mr-1" /> Blokla
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" className="text-admin-success border-admin-success/30 hover:bg-admin-success/5" onClick={() => onUnblock(user.id)}>
+                <Shield size={14} className="mr-1" /> Bloku aç
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function IstifadecilerPage() {
+  const [users, setUsers] = useState(mockUsers);
+  const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filtered = users.filter((u) => {
+    if (roleFilter !== "all") {
+      const roleMap: Record<string, string> = { user: "İstifadəçi", mod: "Moderator", admin: "Admin" };
+      if (u.role !== roleMap[roleFilter]) return false;
+    }
+    if (statusFilter !== "all") {
+      if (statusFilter === "aktiv" && u.status !== "aktiv") return false;
+      if (statusFilter === "blok" && u.status !== "bloklanmis") return false;
+    }
+    if (searchQuery && !u.name.toLowerCase().includes(searchQuery.toLowerCase()) && !u.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
+  const handleBlock = (id: number) => {
+    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "bloklanmis" as const } : u));
+    setDetailUser(null);
+    toast({ title: "🚫 İstifadəçi bloklandı", description: `İstifadəçi #${id} bloklandı` });
+  };
+
+  const handleUnblock = (id: number) => {
+    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "aktiv" as const } : u));
+    setDetailUser(null);
+    toast({ title: "✅ Blok açıldı", description: `İstifadəçi #${id} aktivləşdirildi` });
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Ümumi", value: users.length, color: "text-admin-info" },
+          { label: "Aktiv", value: users.filter((u) => u.status === "aktiv").length, color: "text-admin-success" },
+          { label: "Bloklanmış", value: users.filter((u) => u.status === "bloklanmis").length, color: "text-admin-danger" },
+          { label: "Admin/Mod", value: users.filter((u) => u.role !== "İstifadəçi").length, color: "text-admin-accent" },
+        ].map((s) => (
+          <div key={s.label} className="bg-card rounded-lg border border-border p-3 text-center">
+            <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
+            <p className="text-xs text-muted-foreground">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 flex flex-wrap gap-3 items-end">
-        <Input placeholder="İstifadəçi axtar..." className="h-9 flex-1 min-w-[200px]" />
-        <Select><SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Rol" /></SelectTrigger>
+        <Input
+          placeholder="Ad və ya email axtar..."
+          className="h-9 flex-1 min-w-[200px]"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <Select value={roleFilter} onValueChange={setRoleFilter}>
+          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Rol" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Hamısı</SelectItem>
             <SelectItem value="user">İstifadəçi</SelectItem>
@@ -34,7 +389,8 @@ export default function IstifadecilerPage() {
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>
-        <Select><SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Hamısı</SelectItem>
             <SelectItem value="aktiv">Aktiv</SelectItem>
@@ -42,8 +398,16 @@ export default function IstifadecilerPage() {
           </SelectContent>
         </Select>
         <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90"><Search size={14} className="mr-1" /> Axtar</Button>
+        {(roleFilter !== "all" || statusFilter !== "all" || searchQuery) && (
+          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setRoleFilter("all"); setStatusFilter("all"); setSearchQuery(""); }}>
+            <X size={12} className="mr-1" /> Sıfırla
+          </Button>
+        )}
       </div>
 
+      <div className="text-xs text-muted-foreground">{filtered.length} nəticə</div>
+
+      {/* Table */}
       <div className="bg-card rounded-lg border border-border overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -61,28 +425,37 @@ export default function IstifadecilerPage() {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                <td className="p-3"><input type="checkbox" className="rounded" /></td>
+            {filtered.map((u) => (
+              <tr
+                key={u.id}
+                className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
+                onClick={() => setDetailUser(u)}
+              >
+                <td className="p-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="rounded" /></td>
                 <td className="p-3 text-muted-foreground">#{u.id}</td>
                 <td className="p-3 font-medium">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-admin-accent flex items-center justify-center text-xs font-bold text-accent-foreground">{u.name[0]}</div>
-                    {u.name}
+                    <div className="w-7 h-7 rounded-full bg-admin-accent flex items-center justify-center text-xs font-bold text-accent-foreground shrink-0">{u.name[0]}</div>
+                    <div>
+                      <span>{u.name}</span>
+                      {u.verified && <span className="text-admin-info text-[10px] ml-1">✓</span>}
+                    </div>
                   </div>
                 </td>
-                <td className="p-3 text-muted-foreground">{u.email}</td>
-                <td className="p-3 text-muted-foreground text-xs">{u.phone}</td>
+                <td className="p-3 text-muted-foreground text-xs">{u.email}</td>
+                <td className="p-3 text-muted-foreground text-xs font-mono">{u.phone}</td>
                 <td className="p-3 tabular-nums">{u.ads}</td>
                 <td className="p-3 text-muted-foreground text-xs">{u.date}</td>
                 <td className="p-3"><span className={`text-xs font-medium px-2 py-0.5 rounded ${roleColor[u.role]}`}>{u.role}</span></td>
                 <td className="p-3"><StatusBadge status={u.status} /></td>
-                <td className="p-3">
+                <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><Eye size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailUser(u)}><Eye size={13} /></Button>
                     <Button variant="ghost" size="icon" className="h-7 w-7"><Edit size={13} /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger"><Ban size={13} /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><Mail size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}>
+                      <Ban size={13} />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDetailUser(u); }}><Mail size={13} /></Button>
                   </div>
                 </td>
               </tr>
@@ -90,6 +463,15 @@ export default function IstifadecilerPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Detail Dialog */}
+      <UserDetailDialog
+        user={detailUser}
+        open={!!detailUser}
+        onClose={() => setDetailUser(null)}
+        onBlock={handleBlock}
+        onUnblock={handleUnblock}
+      />
     </div>
   );
 }

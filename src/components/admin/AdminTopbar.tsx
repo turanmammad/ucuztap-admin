@@ -44,12 +44,18 @@ export function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [dark, setDark] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications);
   const pageLabel = pathLabels[location.pathname] || "Admin";
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const toggleDark = () => {
     setDark(!dark);
     document.documentElement.classList.toggle("dark");
+  };
+
+  const handleNotificationClick = (id: number, href: string) => {
+    setNotifications((prev) => prev.map((item) => item.id === id ? { ...item, unread: false } : item));
+    navigate(href);
   };
 
   return (

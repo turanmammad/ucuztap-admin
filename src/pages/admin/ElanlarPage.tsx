@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 
 interface Ad {
   id: number;
@@ -250,7 +251,17 @@ export default function ElanlarPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState("20");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchParams] = useSearchParams();
   const [editAd, setEditAd] = useState<Ad | null>(null);
+
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status && ["aktiv", "gozlemede", "redd", "vip", "silinmis", "all"].includes(status)) {
+      setStatusFilter(status);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
 
   const toggleSelect = (id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
 

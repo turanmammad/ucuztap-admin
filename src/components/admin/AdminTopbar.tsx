@@ -28,12 +28,12 @@ const pathLabels: Record<string, string> = {
   "/tenzimlemer": "Tənzimləmələr",
 };
 
-const notifications = [
-  { id: 1, text: "Yeni 12 elan təsdiq gözləyir", time: "2 dəq əvvəl", unread: true },
-  { id: 2, text: "Email server yavaşlama aşkarlandı", time: "14 dəq əvvəl", unread: true },
-  { id: 3, text: "3 yeni şikayət daxil olub", time: "1 saat əvvəl", unread: true },
-  { id: 4, text: "Günlük backup tamamlandı", time: "3 saat əvvəl", unread: false },
-  { id: 5, text: "SSL sertifikat 30 gün sonra bitir", time: "Dünən", unread: false },
+const initialNotifications = [
+  { id: 1, text: "Yeni 12 elan təsdiq gözləyir", time: "2 dəq əvvəl", unread: true, href: "/elanlar?status=gozlemede" },
+  { id: 2, text: "Email server yavaşlama aşkarlandı", time: "14 dəq əvvəl", unread: true, href: "/sistem#services" },
+  { id: 3, text: "3 yeni şikayət daxil olub", time: "1 saat əvvəl", unread: true, href: "/sikayetler" },
+  { id: 4, text: "Günlük backup tamamlandı", time: "3 saat əvvəl", unread: false, href: "/sistem#incidents" },
+  { id: 5, text: "SSL sertifikat 30 gün sonra bitir", time: "Dünən", unread: false, href: "/sistem#services" },
 ];
 
 interface AdminTopbarProps {
@@ -44,12 +44,18 @@ export function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [dark, setDark] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications);
   const pageLabel = pathLabels[location.pathname] || "Admin";
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const toggleDark = () => {
     setDark(!dark);
     document.documentElement.classList.toggle("dark");
+  };
+
+  const handleNotificationClick = (id: number, href: string) => {
+    setNotifications((prev) => prev.map((item) => item.id === id ? { ...item, unread: false } : item));
+    navigate(href);
   };
 
   return (
@@ -87,7 +93,11 @@ export function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
               <p className="text-sm font-semibold">Bildirişlər</p>
             </div>
             {notifications.map((n) => (
-              <DropdownMenuItem key={n.id} className="flex items-start gap-2 px-3 py-2.5 cursor-pointer">
+              <DropdownMenuItem
+                key={n.id}
+                className="flex items-start gap-2 px-3 py-2.5 cursor-pointer"
+                onSelect={() => handleNotificationClick(n.id, n.href)}
+              >
                 {n.unread && <span className="w-2 h-2 rounded-full bg-admin-info mt-1.5 shrink-0" />}
                 {!n.unread && <span className="w-2 h-2 shrink-0" />}
                 <div className="min-w-0">
@@ -97,7 +107,7 @@ export function AdminTopbar({ onMenuToggle }: AdminTopbarProps) {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="justify-center text-xs text-muted-foreground cursor-pointer">
+            <DropdownMenuItem className="justify-center text-xs text-muted-foreground cursor-pointer" onSelect={() => navigate("/audit-log")}>
               Bütün bildirişlər
             </DropdownMenuItem>
           </DropdownMenuContent>

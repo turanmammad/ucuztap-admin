@@ -3,7 +3,7 @@ import {
   LayoutDashboard, FileText, Users, FolderTree, MapPin,
   CreditCard, AlertTriangle, BarChart3, Bot, Mail,
   ClipboardList, Settings, ExternalLink, ChevronLeft, ChevronRight, Store,
-  Activity, X,
+  Activity, X, Layout,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";

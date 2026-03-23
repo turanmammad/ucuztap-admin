@@ -506,6 +506,7 @@ export default function IstifadecilerPage() {
         onClose={() => setDetailUser(null)}
         onBlock={handleBlock}
         onUnblock={handleUnblock}
+        onEdit={handleEditUser}
       />
     </div>
   );

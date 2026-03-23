@@ -28,12 +28,12 @@ const pathLabels: Record<string, string> = {
   "/tenzimlemer": "Tənzimləmələr",
 };
 
-const notifications = [
-  { id: 1, text: "Yeni 12 elan təsdiq gözləyir", time: "2 dəq əvvəl", unread: true },
-  { id: 2, text: "Email server yavaşlama aşkarlandı", time: "14 dəq əvvəl", unread: true },
-  { id: 3, text: "3 yeni şikayət daxil olub", time: "1 saat əvvəl", unread: true },
-  { id: 4, text: "Günlük backup tamamlandı", time: "3 saat əvvəl", unread: false },
-  { id: 5, text: "SSL sertifikat 30 gün sonra bitir", time: "Dünən", unread: false },
+const initialNotifications = [
+  { id: 1, text: "Yeni 12 elan təsdiq gözləyir", time: "2 dəq əvvəl", unread: true, href: "/elanlar?status=gozlemede" },
+  { id: 2, text: "Email server yavaşlama aşkarlandı", time: "14 dəq əvvəl", unread: true, href: "/sistem#services" },
+  { id: 3, text: "3 yeni şikayət daxil olub", time: "1 saat əvvəl", unread: true, href: "/sikayetler" },
+  { id: 4, text: "Günlük backup tamamlandı", time: "3 saat əvvəl", unread: false, href: "/sistem#incidents" },
+  { id: 5, text: "SSL sertifikat 30 gün sonra bitir", time: "Dünən", unread: false, href: "/sistem#services" },
 ];
 
 interface AdminTopbarProps {

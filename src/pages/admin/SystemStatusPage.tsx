@@ -161,7 +161,7 @@ export default function SystemStatusPage() {
       </div>
 
       {/* Services Grid */}
-      <div className="bg-card rounded-lg border border-border">
+      <div id="services" className="bg-card rounded-lg border border-border">
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-semibold">Servislər</h3>
         </div>

@@ -3,8 +3,20 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import DashboardPage from "@/pages/admin/DashboardPage";
+import ElanlarPage from "@/pages/admin/ElanlarPage";
+import IstifadecilerPage from "@/pages/admin/IstifadecilerPage";
+import KateqoriyalarPage from "@/pages/admin/KateqoriyalarPage";
+import LokasiyalarPage from "@/pages/admin/LokasiyalarPage";
+import OdenislerPage from "@/pages/admin/OdenislerPage";
+import SikayetlerPage from "@/pages/admin/SikayetlerPage";
+import HesabatlarPage from "@/pages/admin/HesabatlarPage";
+import AiPage from "@/pages/admin/AiPage";
+import EmailSmsPage from "@/pages/admin/EmailSmsPage";
+import AuditLogPage from "@/pages/admin/AuditLogPage";
+import TenzimlemelarPage from "@/pages/admin/TenzimlemelarPage";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -15,8 +27,20 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route element={<AdminLayout />}>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/elanlar" element={<ElanlarPage />} />
+            <Route path="/istifadeciler" element={<IstifadecilerPage />} />
+            <Route path="/kateqoriyalar" element={<KateqoriyalarPage />} />
+            <Route path="/lokasiyalar" element={<LokasiyalarPage />} />
+            <Route path="/odenisler" element={<OdenislerPage />} />
+            <Route path="/sikayetler" element={<SikayetlerPage />} />
+            <Route path="/hesabatlar" element={<HesabatlarPage />} />
+            <Route path="/ai" element={<AiPage />} />
+            <Route path="/email-sms" element={<EmailSmsPage />} />
+            <Route path="/audit-log" element={<AuditLogPage />} />
+            <Route path="/tenzimlemer" element={<TenzimlemelarPage />} />
+          </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

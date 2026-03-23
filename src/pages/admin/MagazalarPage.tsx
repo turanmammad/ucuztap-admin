@@ -185,7 +185,7 @@ function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, o
                 Blokla
               </Button>
             )}
-            <Button variant="outline"><Edit size={14} className="mr-1" /> Redaktə et</Button>
+            <Button variant="outline" onClick={() => onEdit(shop)}><Edit size={14} className="mr-1" /> Redaktə et</Button>
           </div>
         </div>
       </DialogContent>

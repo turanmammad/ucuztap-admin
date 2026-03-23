@@ -407,7 +407,7 @@ export default function MagazalarPage() {
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => handleReject(shop.id)}><X size={13} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><Edit size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(shop)}><Edit size={13} /></Button>
                   </div>
                 </td>
               </tr>

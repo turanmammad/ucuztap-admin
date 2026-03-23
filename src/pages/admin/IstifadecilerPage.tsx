@@ -75,12 +75,13 @@ const roleColor: Record<string, string> = {
 
 const profileTabs = ["Ümumi", "Elanlar", "Ödənişlər", "Aktivlik"];
 
-function UserDetailDialog({ user, open, onClose, onBlock, onUnblock }: {
+function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
   user: User | null;
   open: boolean;
   onClose: () => void;
   onBlock: (id: number) => void;
   onUnblock: (id: number) => void;
+  onEdit: (id: number) => void;
 }) {
   const [tab, setTab] = useState(0);
   const [msgMode, setMsgMode] = useState(false);

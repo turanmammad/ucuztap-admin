@@ -3,7 +3,7 @@ import {
   LayoutDashboard, FileText, Users, FolderTree, MapPin,
   CreditCard, AlertTriangle, BarChart3, Bot, Mail,
   ClipboardList, Settings, ExternalLink, ChevronLeft, ChevronRight, Store,
-  Activity, X,
+  Activity, X, Layout,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -22,6 +22,7 @@ const navItems = [
   { label: "Email/SMS/Push", icon: Mail, path: "/email-sms" },
   { label: "Audit Log", icon: ClipboardList, path: "/audit-log" },
   { label: "Sistem Vəziyyəti", icon: Activity, path: "/sistem" },
+  { label: "Reklamlar", icon: Layout, path: "/reklamlar" },
   { label: "Tənzimləmələr", icon: Settings, path: "/tenzimlemer" },
 ];
 

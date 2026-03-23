@@ -518,9 +518,9 @@ export default function ElanlarPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          Səhifə başına:
+          <span className="text-xs hidden sm:inline">Səhifə başına:</span>
           <Select value={perPage} onValueChange={setPerPage}>
             <SelectTrigger className="w-[70px] h-8"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -529,8 +529,8 @@ export default function ElanlarPage() {
               <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-xs ml-2">
-            {filteredAds.length} elan, səhifə {currentPage}
+          <span className="text-xs">
+            {filteredAds.length} elan
           </span>
         </div>
         <div className="flex gap-1 items-center">

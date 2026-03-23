@@ -467,7 +467,7 @@ export default function IstifadecilerPage() {
                 <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-0.5">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailUser(u)}><Eye size={12} /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditUser(u.id)}><Edit size={12} /></Button>
                     <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}>
                       <Ban size={12} />
                     </Button>

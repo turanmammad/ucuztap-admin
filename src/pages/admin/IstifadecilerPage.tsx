@@ -357,6 +357,20 @@ export default function IstifadecilerPage() {
     toast({ title: "✅ Blok açıldı", description: `İstifadəçi #${id} aktivləşdirildi` });
   };
 
+  const handleEditUser = (userId: number) => {
+    setEditUserId(userId);
+    const user = users.find(u => u.id === userId);
+    if (user) setEditRole(user.role);
+  };
+
+  const handleSaveEdit = () => {
+    if (editUserId === null) return;
+    setUsers(prev => prev.map(u => u.id === editUserId ? { ...u, role: editRole as User["role"] } : u));
+    toast({ title: "✅ İstifadəçi yeniləndi", description: `#${editUserId} rolu "${editRole}" olaraq dəyişdirildi` });
+    setEditUserId(null);
+    setDetailUser(null);
+  };
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Stats */}

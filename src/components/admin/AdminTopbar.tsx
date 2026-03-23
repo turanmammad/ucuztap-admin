@@ -14,7 +14,7 @@ const pathLabels: Record<string, string> = {
   "/sikayetler": "Şikayətlər",
   "/hesabatlar": "Hesabatlar",
   "/ai": "AI Alətlər",
-  "/email-sms": "Email/SMS",
+  "/email-sms": "Email/SMS/Push",
   "/audit-log": "Audit Log",
   "/tenzimlemer": "Tənzimləmələr",
 };

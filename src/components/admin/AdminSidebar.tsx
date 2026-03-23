@@ -18,7 +18,7 @@ const navItems = [
   { label: "Şikayətlər", icon: AlertTriangle, path: "/sikayetler" },
   { label: "Hesabatlar", icon: BarChart3, path: "/hesabatlar" },
   { label: "AI Alətlər", icon: Bot, path: "/ai" },
-  { label: "Email/SMS", icon: Mail, path: "/email-sms" },
+  { label: "Email/SMS/Push", icon: Mail, path: "/email-sms" },
   { label: "Audit Log", icon: ClipboardList, path: "/audit-log" },
   { label: "Tənzimləmələr", icon: Settings, path: "/tenzimlemer" },
 ];

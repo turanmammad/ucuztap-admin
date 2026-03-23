@@ -329,6 +329,8 @@ export default function IstifadecilerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editUserId, setEditUserId] = useState<number | null>(null);
+  const [editRole, setEditRole] = useState("");
 
   const filtered = users.filter((u) => {
     if (roleFilter !== "all") {

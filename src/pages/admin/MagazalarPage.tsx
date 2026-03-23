@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X, Edit, Store, MapPin, Phone, Mail, Globe, Star, ShoppingBag, Calendar } from "lucide-react";
+import { Search, Eye, Check, X, Edit, Store, MapPin, Phone, Mail, Globe, Star, ShoppingBag, Calendar, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { ShopFormDialog } from "@/components/admin/ShopFormDialog";
 
 interface Shop {
   id: number;
@@ -70,13 +71,14 @@ const planColor: Record<string, string> = {
   Premium: "bg-admin-accent/15 text-admin-accent",
 };
 
-function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock }: {
+function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, onEdit }: {
   shop: Shop | null;
   open: boolean;
   onClose: () => void;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
   onBlock: (id: number) => void;
+  onEdit: (shop: Shop) => void;
 }) {
   if (!shop) return null;
 
@@ -183,7 +185,7 @@ function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock }:
                 Blokla
               </Button>
             )}
-            <Button variant="outline"><Edit size={14} className="mr-1" /> Redaktə et</Button>
+            <Button variant="outline" onClick={() => onEdit(shop)}><Edit size={14} className="mr-1" /> Redaktə et</Button>
           </div>
         </div>
       </DialogContent>
@@ -196,6 +198,8 @@ export default function MagazalarPage() {
   const [detailShop, setDetailShop] = useState<Shop | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [formOpen, setFormOpen] = useState(false);
+  const [editShop, setEditShop] = useState<Shop | null>(null);
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
@@ -221,6 +225,54 @@ export default function MagazalarPage() {
     toast({ title: "🚫 Mağaza bloklandı", description: `Mağaza #${id} bloklandı` });
   };
 
+  const handleCreate = (data: any) => {
+    const newShop: Shop = {
+      id: 3000 + shops.length + Math.floor(Math.random() * 100),
+      name: data.name,
+      owner: "Admin User",
+      ownerEmail: data.email || "admin@ucuztap.az",
+      ownerPhone: data.phone || "+994 50 000 00 00",
+      category: data.category,
+      location: data.location || "Bakı",
+      address: data.address || "",
+      status: "aktiv",
+      adsCount: 0,
+      rating: 0,
+      reviews: 0,
+      website: data.website || undefined,
+      description: data.description,
+      joinDate: new Date().toISOString().split("T")[0],
+      logo: data.logoPreview || "",
+      verified: true,
+      plan: (data.plan || "Pulsuz") as Shop["plan"],
+      monthlyViews: 0,
+    };
+    setShops((prev) => [newShop, ...prev]);
+    setFormOpen(false);
+    toast({ title: "✅ Mağaza yaradıldı", description: `"${data.name}" uğurla yaradıldı` });
+  };
+
+  const handleEdit = (data: any) => {
+    if (!editShop) return;
+    setShops((prev) => prev.map((s) => s.id === editShop.id ? {
+      ...s,
+      name: data.name || s.name,
+      category: data.category || s.category,
+      location: data.location || s.location,
+      address: data.address || s.address,
+      description: data.description || s.description,
+      website: data.website || s.website,
+      plan: (data.plan || s.plan) as Shop["plan"],
+    } : s));
+    setEditShop(null);
+    toast({ title: "✅ Mağaza yeniləndi", description: `"${data.name}" uğurla yeniləndi` });
+  };
+
+  const openEdit = (shop: Shop) => {
+    setDetailShop(null);
+    setEditShop(shop);
+  };
+
   const pendingCount = shops.filter((s) => s.status === "gozlemede").length;
 
   return (
@@ -242,6 +294,14 @@ export default function MagazalarPage() {
           </Button>
         </div>
       )}
+
+      {/* Header + Stats */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Mağazalar</h2>
+        <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => setFormOpen(true)}>
+          <Plus size={14} className="mr-1" /> Yeni mağaza
+        </Button>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -355,7 +415,7 @@ export default function MagazalarPage() {
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => handleReject(shop.id)}><X size={13} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><Edit size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(shop)}><Edit size={13} /></Button>
                   </div>
                 </td>
               </tr>
@@ -372,6 +432,34 @@ export default function MagazalarPage() {
         onApprove={handleApprove}
         onReject={handleReject}
         onBlock={handleBlock}
+        onEdit={openEdit}
+      />
+
+      {/* Create Dialog */}
+      <ShopFormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSave={handleCreate}
+        title="Yeni mağaza yarat"
+      />
+
+      {/* Edit Dialog */}
+      <ShopFormDialog
+        open={!!editShop}
+        onClose={() => setEditShop(null)}
+        onSave={handleEdit}
+        title={editShop ? `"${editShop.name}" — Redaktə` : ""}
+        editData={editShop ? {
+          name: editShop.name,
+          description: editShop.description,
+          category: editShop.category,
+          location: editShop.location,
+          address: editShop.address,
+          phone: editShop.ownerPhone,
+          email: editShop.ownerEmail,
+          website: editShop.website || "",
+          plan: editShop.plan,
+        } : null}
       />
     </div>
   );

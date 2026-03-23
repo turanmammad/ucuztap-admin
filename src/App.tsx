@@ -42,6 +42,7 @@ const App = () => (
             <Route path="/ai" element={<AiPage />} />
             <Route path="/email-sms" element={<EmailSmsPage />} />
             <Route path="/audit-log" element={<AuditLogPage />} />
+            <Route path="/sistem" element={<SystemStatusPage />} />
             <Route path="/tenzimlemer" element={<TenzimlemelarPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

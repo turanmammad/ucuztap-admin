@@ -21,6 +21,7 @@ const navItems = [
   { label: "AI Alətlər", icon: Bot, path: "/ai" },
   { label: "Email/SMS/Push", icon: Mail, path: "/email-sms" },
   { label: "Audit Log", icon: ClipboardList, path: "/audit-log" },
+  { label: "Sistem Vəziyyəti", icon: Activity, path: "/sistem" },
   { label: "Tənzimləmələr", icon: Settings, path: "/tenzimlemer" },
 ];
 

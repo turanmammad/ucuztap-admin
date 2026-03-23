@@ -31,6 +31,7 @@ const App = () => (
           <Route element={<AdminLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/elanlar" element={<ElanlarPage />} />
+            <Route path="/magazalar" element={<MagazalarPage />} />
             <Route path="/istifadeciler" element={<IstifadecilerPage />} />
             <Route path="/kateqoriyalar" element={<KateqoriyalarPage />} />
             <Route path="/lokasiyalar" element={<LokasiyalarPage />} />

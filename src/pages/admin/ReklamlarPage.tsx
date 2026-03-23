@@ -492,8 +492,16 @@ export default function ReklamlarPage() {
                         <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleBannerStatus(b.id)}>
                           <ToggleLeft size={12} />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={12} /></Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6"><Copy size={12} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setEditBanner(b); setBannerForm(true); }}>
+                          <Edit size={12} />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => {
+                          const copy: Banner = { ...b, id: banners.length + 300 + Math.floor(Math.random() * 1000), title: `${b.title} (Kopya)`, status: "gozlemede" };
+                          setBanners(prev => [copy, ...prev]);
+                          toast({ title: "📋 Banner kopyalandı", description: `"${b.title}" kopyası yaradıldı` });
+                        }}>
+                          <Copy size={12} />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => deleteBanner(b.id)}><Trash2 size={12} /></Button>
                       </div>
                     </td>

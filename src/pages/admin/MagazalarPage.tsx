@@ -295,6 +295,14 @@ export default function MagazalarPage() {
         </div>
       )}
 
+      {/* Header + Stats */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Mağazalar</h2>
+        <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => setFormOpen(true)}>
+          <Plus size={14} className="mr-1" /> Yeni mağaza
+        </Button>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         {[

@@ -96,7 +96,7 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject }: {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <span>Elan #{ad.id}</span>
@@ -134,7 +134,7 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject }: {
           </div>
 
           {/* Ad Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div>
                 <h4 className="text-xs font-semibold text-muted-foreground uppercase">Başlıq</h4>
@@ -310,63 +310,62 @@ export default function ElanlarPage() {
   const pendingCount = ads.filter((a) => a.status === "gozlemede").length;
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-3 sm:space-y-4 animate-fade-in">
       {/* Pending banner */}
       {pendingCount > 0 && (
-        <div className="bg-admin-warning/5 border border-admin-warning/20 rounded-lg px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-admin-warning/10 flex items-center justify-center">
-              <Filter size={16} className="text-admin-warning" />
+        <div className="bg-admin-warning/5 border border-admin-warning/20 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-admin-warning/10 flex items-center justify-center shrink-0">
+              <Filter size={14} className="text-admin-warning" />
             </span>
-            <div>
-              <p className="text-sm font-medium">{pendingCount} elan təsdiq gözləyir</p>
-              <p className="text-xs text-muted-foreground">Gözləmədəki elanları nəzərdən keçirin</p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium">{pendingCount} elan təsdiq gözləyir</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Gözləmədəki elanları nəzərdən keçirin</p>
             </div>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setStatusFilter("gozlemede")} className="border-admin-warning/30 text-admin-warning hover:bg-admin-warning/5">
-            Gözləyənləri göstər
+          <Button size="sm" variant="outline" onClick={() => setStatusFilter("gozlemede")} className="border-admin-warning/30 text-admin-warning hover:bg-admin-warning/5 text-[10px] sm:text-xs h-7 sm:h-8 shrink-0">
+            Göstər
           </Button>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-card rounded-lg border border-border p-4">
-        <div className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[200px]">
+      <div className="bg-card rounded-lg border border-border p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-end">
+          <div className="flex-1">
             <Input
-              placeholder="Elan başlığı və ya istifadəçi axtar..."
+              placeholder="Axtar..."
               className="h-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Hamısı ({ads.length})</SelectItem>
-              <SelectItem value="aktiv">Aktiv ({ads.filter((a) => a.status === "aktiv").length})</SelectItem>
-              <SelectItem value="gozlemede">Gözləmədə ({ads.filter((a) => a.status === "gozlemede").length})</SelectItem>
-              <SelectItem value="redd">Rədd ({ads.filter((a) => a.status === "redd").length})</SelectItem>
-              <SelectItem value="vip">VIP ({ads.filter((a) => a.status === "vip").length})</SelectItem>
-              <SelectItem value="silinmis">Silinmiş ({ads.filter((a) => a.status === "silinmis").length})</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Kateqoriya" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Hamısı</SelectItem>
-              <SelectItem value="transport">Nəqliyyat</SelectItem>
-              <SelectItem value="realestate">Daşınmaz əmlak</SelectItem>
-              <SelectItem value="electronics">Elektronika</SelectItem>
-              <SelectItem value="evbag">Ev və bağ</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
-            <Search size={14} className="mr-1" /> Axtar
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-[150px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Hamısı ({ads.length})</SelectItem>
+                <SelectItem value="aktiv">Aktiv ({ads.filter((a) => a.status === "aktiv").length})</SelectItem>
+                <SelectItem value="gozlemede">Gözləmədə ({ads.filter((a) => a.status === "gozlemede").length})</SelectItem>
+                <SelectItem value="redd">Rədd ({ads.filter((a) => a.status === "redd").length})</SelectItem>
+                <SelectItem value="vip">VIP ({ads.filter((a) => a.status === "vip").length})</SelectItem>
+                <SelectItem value="silinmis">Silinmiş ({ads.filter((a) => a.status === "silinmis").length})</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full sm:w-[150px] h-9"><SelectValue placeholder="Kateqoriya" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Hamısı</SelectItem>
+                <SelectItem value="transport">Nəqliyyat</SelectItem>
+                <SelectItem value="realestate">Daşınmaz əmlak</SelectItem>
+                <SelectItem value="electronics">Elektronika</SelectItem>
+                <SelectItem value="evbag">Ev və bağ</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           {(statusFilter !== "all" || categoryFilter !== "all") && (
-            <Button size="sm" variant="ghost" onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }} className="text-xs">
-              <X size={12} className="mr-1" /> Filtri sıfırla
+            <Button size="sm" variant="ghost" onClick={() => { setStatusFilter("all"); setCategoryFilter("all"); setSearchQuery(""); }} className="text-xs h-7">
+              <X size={12} className="mr-1" /> Sıfırla
             </Button>
           )}
         </div>
@@ -374,19 +373,19 @@ export default function ElanlarPage() {
 
       {/* Bulk actions */}
       {selected.length > 0 && (
-        <div className="bg-admin-info/5 border border-admin-info/20 rounded-lg px-4 py-2.5 flex items-center gap-3 text-sm animate-fade-in">
-          <span className="font-medium">{selected.length} elan seçildi:</span>
+        <div className="bg-admin-info/5 border border-admin-info/20 rounded-lg px-3 sm:px-4 py-2 flex flex-wrap items-center gap-2 text-sm animate-fade-in">
+          <span className="font-medium text-xs">{selected.length} seçildi:</span>
           <Button size="sm" variant="outline" className="h-7 text-xs text-admin-success border-admin-success/30" onClick={handleBulkApprove}>
             <Check size={12} className="mr-1" /> Təsdiqlə
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs text-admin-danger border-admin-danger/30" onClick={handleBulkReject}>
-            <X size={12} className="mr-1" /> Rədd et
+            <X size={12} className="mr-1" /> Rədd
           </Button>
           <Button size="sm" variant="outline" className="h-7 text-xs text-admin-danger border-admin-danger/30" onClick={handleBulkDelete}>
             <Trash2 size={12} className="mr-1" /> Sil
           </Button>
           <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setSelected([])}>
-            Seçimi ləğv et
+            Ləğv
           </Button>
         </div>
       )}
@@ -396,8 +395,56 @@ export default function ElanlarPage() {
         {filteredAds.length} nəticə tapıldı
       </div>
 
-      {/* Table */}
-      <div className="bg-card rounded-lg border border-border overflow-x-auto -mx-4 sm:mx-0">
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-2">
+        {filteredAds.map((ad) => (
+          <div
+            key={ad.id}
+            onClick={() => setDetailAd(ad)}
+            className={`bg-card rounded-lg border border-border p-3 cursor-pointer active:bg-muted/30 transition-colors ${ad.status === "gozlemede" ? "border-admin-warning/30" : ""}`}
+          >
+            <div className="flex items-start gap-3">
+              <input type="checkbox" checked={selected.includes(ad.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(ad.id); }} className="rounded mt-1 shrink-0" onClick={(e) => e.stopPropagation()} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium truncate">{ad.title}</span>
+                  <StatusBadge status={ad.status} />
+                </div>
+                <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground">
+                  <span>{ad.user}</span>
+                  <span>•</span>
+                  <span>{ad.category}</span>
+                  <span>•</span>
+                  <span className="font-medium text-foreground">{ad.price.toLocaleString()}₼</span>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                    <span>👁️ {ad.views > 999 ? `${(ad.views/1000).toFixed(0)}K` : ad.views}</span>
+                    <span>{ad.date.split(" ")[0]}</span>
+                    {ad.aiFlag && <span className="text-admin-warning font-medium">⚠️AI</span>}
+                    {ad.featured && <span className="text-admin-accent">⭐</span>}
+                  </div>
+                  <div className="flex gap-0.5" onClick={(e) => e.stopPropagation()}>
+                    {ad.status === "gozlemede" && (
+                      <>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-success" onClick={() => handleApprove(ad.id)}><Check size={14} /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => handleReject(ad.id, "Rədd edildi")}><X size={14} /></Button>
+                      </>
+                    )}
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => {
+                      setAds((prev) => prev.map((a) => a.id === ad.id ? { ...a, status: "silinmis" as const } : a));
+                      toast({ title: "🗑️ Silindi" });
+                    }}><Trash2 size={14} /></Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden sm:block bg-card rounded-lg border border-border overflow-x-auto">
         <table className="w-full text-sm" style={{ minWidth: 780 }}>
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30 text-xs">
@@ -471,9 +518,9 @@ export default function ElanlarPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          Səhifə başına:
+          <span className="text-xs hidden sm:inline">Səhifə başına:</span>
           <Select value={perPage} onValueChange={setPerPage}>
             <SelectTrigger className="w-[70px] h-8"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -482,8 +529,8 @@ export default function ElanlarPage() {
               <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-xs ml-2">
-            {filteredAds.length} elan, səhifə {currentPage}
+          <span className="text-xs">
+            {filteredAds.length} elan
           </span>
         </div>
         <div className="flex gap-1 items-center">

@@ -30,7 +30,7 @@ export function AdminLayout() {
 
       <div className="flex-1 lg:ml-64 flex flex-col transition-all duration-300" id="admin-main">
         <AdminTopbar onMenuToggle={() => setMobileOpen(prev => !prev)} />
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

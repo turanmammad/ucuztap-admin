@@ -340,7 +340,7 @@ export default function MagazalarPage() {
             <SelectItem value="bloklanmis">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        <Select>
+        <Select value={planFilter} onValueChange={setPlanFilter}>
           <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Plan" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Hamısı</SelectItem>

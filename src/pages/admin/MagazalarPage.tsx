@@ -352,8 +352,8 @@ export default function MagazalarPage() {
         <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
           <Search size={14} className="mr-1" /> Axtar
         </Button>
-        {statusFilter !== "all" && (
-          <Button size="sm" variant="ghost" onClick={() => setStatusFilter("all")} className="text-xs">
+        {(statusFilter !== "all" || planFilter !== "all" || searchQuery) && (
+          <Button size="sm" variant="ghost" onClick={() => { setStatusFilter("all"); setPlanFilter("all"); setSearchQuery(""); }} className="text-xs">
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}

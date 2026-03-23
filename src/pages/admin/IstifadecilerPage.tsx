@@ -481,6 +481,24 @@ export default function IstifadecilerPage() {
       </div>
 
       {/* Detail Dialog */}
+      {/* Edit Role Dialog */}
+      <Dialog open={editUserId !== null} onOpenChange={() => setEditUserId(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>İstifadəçi rolunu dəyiş</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <Select value={editRole} onValueChange={setEditRole}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="İstifadəçi">İstifadəçi</SelectItem>
+                <SelectItem value="Moderator">Moderator</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button className="w-full bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={handleSaveEdit}>Yadda saxla</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <UserDetailDialog
         user={detailUser}
         open={!!detailUser}

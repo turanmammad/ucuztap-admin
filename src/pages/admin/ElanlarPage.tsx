@@ -228,12 +228,14 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject }: {
               >
                 <X size={16} className="mr-1" /> Rədd et
               </Button>
-              <Button variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5">
-                <Trash2 size={16} className="mr-1" /> Sil
-              </Button>
-            </div>
-          )}
-        </div>
+              <Button variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => {
+                onReject(ad.id, "Elan admin tərəfindən silindi");
+              }}>
+                 <Trash2 size={16} className="mr-1" /> Sil
+               </Button>
+             </div>
+           )}
+         </div>
       </DialogContent>
     </Dialog>
   );

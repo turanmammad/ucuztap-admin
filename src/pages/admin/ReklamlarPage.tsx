@@ -628,7 +628,7 @@ export default function ReklamlarPage() {
 
       {/* Dialogs */}
       <SlotEditDialog slot={editSlot} open={!!editSlot} onClose={() => setEditSlot(null)} onSave={handleSlotSave} />
-      <BannerFormDialog banner={editBanner} slots={slots} open={bannerForm} onClose={() => setBannerForm(false)} onSave={handleBannerCreate} />
+      <BannerFormDialog banner={editBanner} slots={slots} open={bannerForm} onClose={() => { setBannerForm(false); setEditBanner(null); }} onSave={handleBannerCreate} />
       <AiBannerDialog slots={slots} open={aiDialog} onClose={() => setAiDialog(false)} onGenerate={handleAiGenerate} />
     </div>
   );

@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X, Edit, Store, MapPin, Phone, Mail, Globe, Star, ShoppingBag, Calendar } from "lucide-react";
+import { Search, Eye, Check, X, Edit, Store, MapPin, Phone, Mail, Globe, Star, ShoppingBag, Calendar, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { ShopFormDialog } from "@/components/admin/ShopFormDialog";
 
 interface Shop {
   id: number;

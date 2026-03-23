@@ -315,6 +315,44 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* System Health Strip */}
+      <div className="bg-card rounded-lg border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Activity size={14} className="text-emerald-500" />
+            Sistem Vəziyyəti
+          </h3>
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/sistem")}>
+            Ətraflı →
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { name: "Web Server", status: "ok" },
+            { name: "API", status: "ok" },
+            { name: "Database", status: "ok" },
+            { name: "Email SMTP", status: "warn" },
+          ].map((s) => (
+            <div key={s.name} className="flex items-center gap-2 text-xs">
+              {s.status === "ok" ? (
+                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+              ) : (
+                <AlertTriangle size={14} className="text-amber-500 shrink-0" />
+              )}
+              <span className="text-muted-foreground">{s.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Shield size={12} />
+            SSL: Aktiv
+          </span>
+          <span>Uptime: 45 gün</span>
+          <span>Canlı: 2,847 istifadəçi</span>
+        </div>
+      </div>
     </div>
   );
 }

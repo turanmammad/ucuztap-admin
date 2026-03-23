@@ -424,6 +424,34 @@ export default function MagazalarPage() {
         onApprove={handleApprove}
         onReject={handleReject}
         onBlock={handleBlock}
+        onEdit={openEdit}
+      />
+
+      {/* Create Dialog */}
+      <ShopFormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSave={handleCreate}
+        title="Yeni mağaza yarat"
+      />
+
+      {/* Edit Dialog */}
+      <ShopFormDialog
+        open={!!editShop}
+        onClose={() => setEditShop(null)}
+        onSave={handleEdit}
+        title={editShop ? `"${editShop.name}" — Redaktə` : ""}
+        editData={editShop ? {
+          name: editShop.name,
+          description: editShop.description,
+          category: editShop.category,
+          location: editShop.location,
+          address: editShop.address,
+          phone: editShop.ownerPhone,
+          email: editShop.ownerEmail,
+          website: editShop.website || "",
+          plan: editShop.plan,
+        } : null}
       />
     </div>
   );

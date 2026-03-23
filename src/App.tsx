@@ -17,6 +17,7 @@ import AiPage from "@/pages/admin/AiPage";
 import EmailSmsPage from "@/pages/admin/EmailSmsPage";
 import AuditLogPage from "@/pages/admin/AuditLogPage";
 import TenzimlemelarPage from "@/pages/admin/TenzimlemelarPage";
+import SystemStatusPage from "@/pages/admin/SystemStatusPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

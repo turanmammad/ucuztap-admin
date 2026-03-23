@@ -409,19 +409,19 @@ export default function IstifadecilerPage() {
 
       {/* Table */}
       <div className="bg-card rounded-lg border border-border overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="min-w-[850px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 w-10"><input type="checkbox" className="rounded" /></th>
-              <th className="p-3 font-medium">ID</th>
+              <th className="p-3 w-8"><input type="checkbox" className="rounded" /></th>
+              <th className="p-3 font-medium w-[50px]">ID</th>
               <th className="p-3 font-medium">Ad</th>
               <th className="p-3 font-medium">Email</th>
-              <th className="p-3 font-medium">Telefon</th>
-              <th className="p-3 font-medium">Elan</th>
-              <th className="p-3 font-medium">Qeydiyyat</th>
-              <th className="p-3 font-medium">Rol</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Əməliyyat</th>
+              <th className="p-3 font-medium w-[120px]">Telefon</th>
+              <th className="p-3 font-medium w-[50px]">Elan</th>
+              <th className="p-3 font-medium w-[85px]">Qeydiyyat</th>
+              <th className="p-3 font-medium w-[75px]">Rol</th>
+              <th className="p-3 font-medium w-[70px]">Status</th>
+              <th className="p-3 font-medium w-[110px]">Əməliyyat</th>
             </tr>
           </thead>
           <tbody>
@@ -432,30 +432,30 @@ export default function IstifadecilerPage() {
                 onClick={() => setDetailUser(u)}
               >
                 <td className="p-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="rounded" /></td>
-                <td className="p-3 text-muted-foreground">#{u.id}</td>
+                <td className="p-3 text-muted-foreground text-xs">#{u.id}</td>
                 <td className="p-3 font-medium">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-admin-accent flex items-center justify-center text-xs font-bold text-accent-foreground shrink-0">{u.name[0]}</div>
-                    <div>
-                      <span>{u.name}</span>
-                      {u.verified && <span className="text-admin-info text-[10px] ml-1">✓</span>}
+                    <div className="w-6 h-6 rounded-full bg-admin-accent flex items-center justify-center text-[10px] font-bold text-accent-foreground shrink-0">{u.name[0]}</div>
+                    <div className="min-w-0">
+                      <span className="text-xs block truncate">{u.name}</span>
+                      {u.verified && <span className="text-admin-info text-[9px]">✓</span>}
                     </div>
                   </div>
                 </td>
-                <td className="p-3 text-muted-foreground text-xs">{u.email}</td>
-                <td className="p-3 text-muted-foreground text-xs font-mono">{u.phone}</td>
-                <td className="p-3 tabular-nums">{u.ads}</td>
-                <td className="p-3 text-muted-foreground text-xs">{u.date}</td>
-                <td className="p-3"><span className={`text-xs font-medium px-2 py-0.5 rounded ${roleColor[u.role]}`}>{u.role}</span></td>
+                <td className="p-3 text-muted-foreground text-xs truncate max-w-[140px]">{u.email}</td>
+                <td className="p-3 text-muted-foreground text-[11px] font-mono">{u.phone}</td>
+                <td className="p-3 tabular-nums text-xs">{u.ads}</td>
+                <td className="p-3 text-muted-foreground text-[11px]">{u.date}</td>
+                <td className="p-3"><span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${roleColor[u.role]}`}>{u.role}</span></td>
                 <td className="p-3"><StatusBadge status={u.status} /></td>
                 <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailUser(u)}><Eye size={13} /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7"><Edit size={13} /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}>
-                      <Ban size={13} />
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailUser(u)}><Eye size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6"><Edit size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}>
+                      <Ban size={12} />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setDetailUser(u); }}><Mail size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setDetailUser(u); }}><Mail size={12} /></Button>
                   </div>
                 </td>
               </tr>

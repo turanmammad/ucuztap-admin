@@ -356,19 +356,19 @@ export default function MagazalarPage() {
 
       {/* Table */}
       <div className="bg-card rounded-lg border border-border overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="min-w-[900px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 font-medium">ID</th>
+              <th className="p-3 font-medium w-[50px]">ID</th>
               <th className="p-3 font-medium">Mağaza</th>
-              <th className="p-3 font-medium">Sahib</th>
-              <th className="p-3 font-medium">Kateqoriya</th>
-              <th className="p-3 font-medium">Lokasiya</th>
-              <th className="p-3 font-medium">Elanlar</th>
-              <th className="p-3 font-medium">Reytinq</th>
-              <th className="p-3 font-medium">Plan</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Əməliyyat</th>
+              <th className="p-3 font-medium w-[100px]">Sahib</th>
+              <th className="p-3 font-medium w-[90px]">Kateqoriya</th>
+              <th className="p-3 font-medium w-[90px]">Lokasiya</th>
+              <th className="p-3 font-medium w-[55px]">Elanlar</th>
+              <th className="p-3 font-medium w-[60px]">Reytinq</th>
+              <th className="p-3 font-medium w-[65px]">Plan</th>
+              <th className="p-3 font-medium w-[70px]">Status</th>
+              <th className="p-3 font-medium w-[110px]">Əməliyyat</th>
             </tr>
           </thead>
           <tbody>
@@ -378,44 +378,42 @@ export default function MagazalarPage() {
                 className={`border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer ${shop.status === "gozlemede" ? "bg-admin-warning/[0.02]" : ""}`}
                 onClick={() => setDetailShop(shop)}
               >
-                <td className="p-3 text-muted-foreground">#{shop.id}</td>
+                <td className="p-3 text-muted-foreground text-xs">#{shop.id}</td>
                 <td className="p-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                      <Store size={14} className="text-muted-foreground" />
+                    <div className="w-7 h-7 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                      <Store size={13} className="text-muted-foreground" />
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium truncate">{shop.name}</span>
-                        {shop.verified && <span className="text-admin-info text-[10px]">✓</span>}
-                      </div>
+                      <span className="font-medium text-xs truncate block">{shop.name}</span>
+                      {shop.verified && <span className="text-admin-info text-[9px]">✓ Təsdiqlənmiş</span>}
                     </div>
                   </div>
                 </td>
-                <td className="p-3 text-xs">{shop.owner}</td>
+                <td className="p-3 text-xs truncate max-w-[100px]">{shop.owner}</td>
                 <td className="p-3 text-muted-foreground text-xs">{shop.category}</td>
                 <td className="p-3 text-muted-foreground text-xs">{shop.location}</td>
-                <td className="p-3 tabular-nums">{shop.adsCount}</td>
+                <td className="p-3 tabular-nums text-xs">{shop.adsCount}</td>
                 <td className="p-3">
                   <div className="flex items-center gap-1 text-xs">
-                    <Star size={12} className="text-admin-accent fill-admin-accent" />
+                    <Star size={11} className="text-admin-accent fill-admin-accent" />
                     {shop.rating}
                   </div>
                 </td>
                 <td className="p-3">
-                  <span className={`text-xs px-2 py-0.5 rounded font-medium ${planColor[shop.plan]}`}>{shop.plan}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${planColor[shop.plan]}`}>{shop.plan}</span>
                 </td>
                 <td className="p-3"><StatusBadge status={shop.status} /></td>
                 <td className="p-3" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-0.5">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDetailShop(shop)}><Eye size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailShop(shop)}><Eye size={12} /></Button>
                     {shop.status === "gozlemede" && (
                       <>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-success" onClick={() => handleApprove(shop.id)}><Check size={13} /></Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-admin-danger" onClick={() => handleReject(shop.id)}><X size={13} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-success" onClick={() => handleApprove(shop.id)}><Check size={12} /></Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => handleReject(shop.id)}><X size={12} /></Button>
                       </>
                     )}
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(shop)}><Edit size={13} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEdit(shop)}><Edit size={12} /></Button>
                   </div>
                 </td>
               </tr>

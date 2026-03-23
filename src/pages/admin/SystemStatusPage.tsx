@@ -240,7 +240,7 @@ export default function SystemStatusPage() {
       </div>
 
       {/* Incident Log */}
-      <div className="bg-card rounded-lg border border-border">
+      <div id="incidents" className="bg-card rounded-lg border border-border">
         <div className="p-4 border-b border-border">
           <h3 className="text-sm font-semibold">Son Hadisələr</h3>
         </div>

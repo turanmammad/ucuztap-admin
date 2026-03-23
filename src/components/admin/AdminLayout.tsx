@@ -1,10 +1,20 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminTopbar } from "./AdminTopbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function AdminLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+
+    const elementId = location.hash.slice(1);
+    requestAnimationFrame(() => {
+      document.getElementById(elementId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [location.pathname, location.hash]);
 
   return (
     <div className="min-h-screen flex">

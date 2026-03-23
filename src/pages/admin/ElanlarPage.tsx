@@ -254,6 +254,15 @@ export default function ElanlarPage() {
   const [searchParams] = useSearchParams();
   const [editAd, setEditAd] = useState<Ad | null>(null);
 
+
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status && ["aktiv", "gozlemede", "redd", "vip", "silinmis", "all"].includes(status)) {
+      setStatusFilter(status);
+      setCurrentPage(1);
+    }
+  }, [searchParams]);
+
   const toggleSelect = (id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
 
   const filteredAds = ads.filter((ad) => {

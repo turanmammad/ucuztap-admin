@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell,
 } from "recharts";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 const revenueData = Array.from({ length: 30 }, (_, i) => ({
   day: `${i + 1}`,
@@ -43,20 +46,41 @@ const arpuData = Array.from({ length: 12 }, (_, i) => ({
 
 const chartStyle = { borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' };
 
+const periods = ["Günlük", "Həftəlik", "Aylıq"];
+
 export default function HesabatlarPage() {
+  const [period, setPeriod] = useState(0);
+
+  const handleExport = (format: string) => {
+    toast({ title: `📥 ${format} yüklənir...` });
+    setTimeout(() => toast({ title: `✅ ${format} faylı yükləndi`, description: `Hesabat ${format} formatında hazırdır` }), 1500);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Hesabatlar</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm"><Download size={14} className="mr-1" /> PDF</Button>
-          <Button variant="outline" size="sm"><Download size={14} className="mr-1" /> CSV</Button>
-          <Button variant="outline" size="sm"><Download size={14} className="mr-1" /> Excel</Button>
+          <div className="flex gap-0.5 bg-muted rounded-lg p-0.5">
+            {periods.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(i)}
+                className={cn("px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                  period === i ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+          <Button variant="outline" size="sm" onClick={() => handleExport("PDF")}><Download size={14} className="mr-1" /> PDF</Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport("CSV")}><Download size={14} className="mr-1" /> CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => handleExport("Excel")}><Download size={14} className="mr-1" /> Excel</Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Revenue */}
         <div className="bg-card rounded-lg border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">📈 Gəlir trendi</h3>
           <div className="h-56">
@@ -72,7 +96,6 @@ export default function HesabatlarPage() {
           </div>
         </div>
 
-        {/* Category */}
         <div className="bg-card rounded-lg border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">📊 Kateqoriya paylanması</h3>
           <div className="h-56">
@@ -88,7 +111,6 @@ export default function HesabatlarPage() {
           </div>
         </div>
 
-        {/* City */}
         <div className="bg-card rounded-lg border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">📍 Şəhər paylanması</h3>
           <div className="h-56">
@@ -104,7 +126,6 @@ export default function HesabatlarPage() {
           </div>
         </div>
 
-        {/* Device */}
         <div className="bg-card rounded-lg border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">📱 Cihaz: Mobile vs Desktop</h3>
           <div className="h-56 flex items-center justify-center">
@@ -127,7 +148,6 @@ export default function HesabatlarPage() {
           </div>
         </div>
 
-        {/* New users */}
         <div className="bg-card rounded-lg border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">👥 Yeni istifadəçilər trendi</h3>
           <div className="h-56">
@@ -143,7 +163,6 @@ export default function HesabatlarPage() {
           </div>
         </div>
 
-        {/* ARPU */}
         <div className="bg-card rounded-lg border border-border p-5">
           <h3 className="text-sm font-semibold mb-4">💰 ARPU — istifadəçi başına gəlir</h3>
           <div className="h-56">

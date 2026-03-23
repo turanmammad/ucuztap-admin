@@ -4,19 +4,24 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 const tabs = ["Ümumi", "SEO", "Email", "Ödəniş", "Limitlər", "Rollar"];
 
 function UmumiTab() {
+  const [title, setTitle] = useState("ucuztap.az — Pulsuz Elanlar");
+  const [desc, setDesc] = useState("Azərbaycanda ən böyük pulsuz elan saytı");
+  const [maintenance, setMaintenance] = useState(false);
+
   return (
     <div className="space-y-4">
-      <div><label className="text-sm font-medium">Sayt başlığı</label><Input defaultValue="ucuztap.az — Pulsuz Elanlar" className="mt-1" /></div>
-      <div><label className="text-sm font-medium">Sayt təsviri</label><Textarea defaultValue="Azərbaycanda ən böyük pulsuz elan saytı" className="mt-1" rows={2} /></div>
+      <div><label className="text-sm font-medium">Sayt başlığı</label><Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" /></div>
+      <div><label className="text-sm font-medium">Sayt təsviri</label><Textarea value={desc} onChange={(e) => setDesc(e.target.value)} className="mt-1" rows={2} /></div>
       <div className="flex items-center justify-between py-2">
         <div><p className="text-sm font-medium">Texniki iş rejimi</p><p className="text-xs text-muted-foreground">Saytı müvəqqəti bağla</p></div>
-        <Switch />
+        <Switch checked={maintenance} onCheckedChange={(v) => { setMaintenance(v); toast({ title: v ? "⚠️ Texniki iş rejimi aktiv" : "✅ Sayt açıqdır" }); }} />
       </div>
-      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">Yadda saxla</Button>
+      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => toast({ title: "✅ Yadda saxlanıldı", description: "Ümumi tənzimləmələr yeniləndi" })}>Yadda saxla</Button>
     </div>
   );
 }
@@ -28,12 +33,17 @@ function SeoTab() {
       <div><label className="text-sm font-medium">Meta description template</label><Input defaultValue="{title} - {category} elanı ucuztap.az saytında" className="mt-1" /></div>
       <div><label className="text-sm font-medium">GA4 ID</label><Input placeholder="G-XXXXXXXXXX" className="mt-1" /></div>
       <div><label className="text-sm font-medium">Yandex Metrica ID</label><Input defaultValue="32707595" className="mt-1" /></div>
-      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">Yadda saxla</Button>
+      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => toast({ title: "✅ SEO tənzimləmələri yadda saxlanıldı" })}>Yadda saxla</Button>
     </div>
   );
 }
 
 function EmailTab() {
+  const handleTest = () => {
+    toast({ title: "📧 Test email göndərilir..." });
+    setTimeout(() => toast({ title: "✅ Test email göndərildi", description: "admin@ucuztap.az adresinə göndərildi" }), 2000);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -43,8 +53,8 @@ function EmailTab() {
       <div><label className="text-sm font-medium">Username</label><Input placeholder="noreply@ucuztap.az" className="mt-1" /></div>
       <div><label className="text-sm font-medium">Password</label><Input type="password" placeholder="••••••" className="mt-1" /></div>
       <div className="flex gap-2">
-        <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">Yadda saxla</Button>
-        <Button variant="outline">Test email göndər</Button>
+        <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => toast({ title: "✅ Email tənzimləmələri yadda saxlanıldı" })}>Yadda saxla</Button>
+        <Button variant="outline" onClick={handleTest}>Test email göndər</Button>
       </div>
     </div>
   );
@@ -61,7 +71,7 @@ function OdenisTab() {
         <div><label className="text-xs text-muted-foreground">Premium</label><Input defaultValue="10" className="mt-1" /></div>
         <div><label className="text-xs text-muted-foreground">İrəli</label><Input defaultValue="2" className="mt-1" /></div>
       </div>
-      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">Yadda saxla</Button>
+      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => toast({ title: "✅ Ödəniş tənzimləmələri yadda saxlanıldı" })}>Yadda saxla</Button>
     </div>
   );
 }
@@ -81,7 +91,7 @@ function LimitlerTab() {
           <Input defaultValue={item.value} className="mt-1 w-[200px]" />
         </div>
       ))}
-      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">Yadda saxla</Button>
+      <Button className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => toast({ title: "✅ Limitlər yadda saxlanıldı" })}>Yadda saxla</Button>
     </div>
   );
 }
@@ -100,7 +110,7 @@ function RollarTab() {
             <span className={cn("px-2.5 py-1 rounded text-xs font-semibold", r.color)}>{r.name}</span>
             <span className="text-sm text-muted-foreground">{r.desc}</span>
           </div>
-          <Button variant="outline" size="sm">Redaktə</Button>
+          <Button variant="outline" size="sm" onClick={() => toast({ title: `${r.name} rolu redaktə edilir...` })}>Redaktə</Button>
         </div>
       ))}
     </div>
@@ -116,7 +126,6 @@ export default function TenzimlemelarPage() {
   return (
     <div className="space-y-4 animate-fade-in">
       <h2 className="text-lg font-semibold">Tənzimləmələr</h2>
-
       <div className="flex gap-1 border-b border-border">
         {tabs.map((t, i) => (
           <button
@@ -131,7 +140,6 @@ export default function TenzimlemelarPage() {
           </button>
         ))}
       </div>
-
       <div className="bg-card rounded-lg border border-border p-6">
         <ActiveTab />
       </div>

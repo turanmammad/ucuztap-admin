@@ -48,9 +48,10 @@ export default function OdenislerPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [serviceFilter, setServiceFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
-  const [sortBy, setSortBy] = useState<"date" | "amount">("date");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [sortKey, setSortKey] = useState<string | null>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 15;
 

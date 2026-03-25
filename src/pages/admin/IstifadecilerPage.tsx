@@ -636,12 +636,13 @@ export default function IstifadecilerPage() {
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
           { label: "Ümumi", value: users.length, color: "text-admin-info" },
           { label: "Aktiv", value: users.filter(u => u.status === "aktiv").length, color: "text-admin-success" },
           { label: "Bloklanmış", value: users.filter(u => u.status === "bloklanmis").length, color: "text-admin-danger" },
           { label: "Admin/Mod", value: users.filter(u => u.role !== "İstifadəçi").length, color: "text-admin-accent" },
+          ...(aiScanDone ? [{ label: "Riskli", value: riskyUsers.length, color: "text-admin-danger" }] : []),
         ].map(s => (
           <div key={s.label} className="bg-card rounded-lg border border-border p-3 text-center">
             <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>

@@ -1,14 +1,101 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X, Trash2, Edit, Bot, Filter, Calendar, ChevronLeft, ChevronRight, Crown, Zap, ArrowUp, Star, Save, ImagePlus, XCircle } from "lucide-react";
+import { Search, Eye, Check, X, Trash2, Edit, Bot, Filter, Calendar, ChevronLeft, ChevronRight, Crown, Zap, ArrowUp, Star, Save, ImagePlus, XCircle, ShieldCheck, AlertTriangle, Phone, Copy, Ban, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+
+// ── AI Moderation Types ──
+interface AiCheckResult {
+  passed: boolean;
+  score: number; // 0-100 (100 = tam təmiz)
+  flags: AiFlag[];
+}
+
+interface AiFlag {
+  type: "spam" | "duplicate" | "phone_in_desc" | "suspicious_price" | "banned_words" | "fake_contact" | "repeat_post" | "low_quality";
+  severity: "low" | "medium" | "high";
+  message: string;
+}
+
+const flagConfig: Record<AiFlag["type"], { label: string; icon: typeof Bot; color: string }> = {
+  spam: { label: "Spam", icon: Ban, color: "text-admin-danger" },
+  duplicate: { label: "Təkrar elan", icon: Copy, color: "text-admin-warning" },
+  phone_in_desc: { label: "Nömrə təsvirdə", icon: Phone, color: "text-admin-warning" },
+  suspicious_price: { label: "Şübhəli qiymət", icon: AlertTriangle, color: "text-admin-danger" },
+  banned_words: { label: "Qadağan söz", icon: Ban, color: "text-admin-danger" },
+  fake_contact: { label: "Saxta əlaqə", icon: AlertTriangle, color: "text-admin-warning" },
+  repeat_post: { label: "Eyni istifadəçi təkrarı", icon: Copy, color: "text-admin-info" },
+  low_quality: { label: "Aşağı keyfiyyət", icon: AlertTriangle, color: "text-muted-foreground" },
+};
+
+// ── AI Filter Engine (simulated) ──
+function runAiCheck(ad: Ad, allAds: Ad[]): AiCheckResult {
+  const flags: AiFlag[] = [];
+
+  // 1. Telefon nömrəsi təsvirdə
+  const phoneRegex = /(\+994|0\d{2})[\s\-.]?\d{2,3}[\s\-.]?\d{2}[\s\-.]?\d{2}/g;
+  const phoneInDesc = phoneRegex.test(ad.description);
+  if (phoneInDesc) {
+    flags.push({ type: "phone_in_desc", severity: "medium", message: "Təsvirdə telefon nömrəsi aşkarlandı — əlaqə sahəsindən istifadə edilməlidir" });
+  }
+
+  // 2. Spam sözlər
+  const spamWords = ["pulsuz", "100% zəmanət", "zəng edin", "whatsapp", "tələsin", "son şans", "maraqlananlar", "real alıcı"];
+  const descLower = ad.description.toLowerCase() + " " + ad.title.toLowerCase();
+  const foundSpam = spamWords.filter(w => descLower.includes(w));
+  if (foundSpam.length >= 2) {
+    flags.push({ type: "spam", severity: "high", message: `Spam ifadələr: "${foundSpam.join('", "')}"` });
+  }
+
+  // 3. Təkrar elan (eyni başlıq digər elanla)
+  const duplicates = allAds.filter(a => a.id !== ad.id && a.title.toLowerCase() === ad.title.toLowerCase() && a.status !== "silinmis");
+  if (duplicates.length > 0) {
+    flags.push({ type: "duplicate", severity: "high", message: `#${duplicates[0].id} ilə eyni başlıq` });
+  }
+
+  // 4. Eyni istifadəçinin çox elanı (son 24 saatda)
+  const sameUserAds = allAds.filter(a => a.id !== ad.id && a.user === ad.user && a.status === "gozlemede");
+  if (sameUserAds.length >= 3) {
+    flags.push({ type: "repeat_post", severity: "medium", message: `Bu istifadəçinin ${sameUserAds.length} gözləmədə olan elanı var` });
+  }
+
+  // 5. Şübhəli qiymət (çox aşağı)
+  const avgPrices: Record<string, number> = { "Nəqliyyat": 15000, "Daşınmaz əmlak": 50000, "Elektronika": 1000, "Ev və bağ": 500 };
+  const avg = avgPrices[ad.category] || 1000;
+  if (ad.price > 0 && ad.price < avg * 0.15) {
+    flags.push({ type: "suspicious_price", severity: "high", message: `Qiymət (${ad.price}₼) kateqoriya ortalamasından çox aşağıdır (${avg}₼)` });
+  }
+
+  // 6. Qadağan sözlər
+  const bannedWords = ["siqaret", "narkotik", "silah", "saxta", "fake", "oğurlanmış"];
+  const foundBanned = bannedWords.filter(w => descLower.includes(w));
+  if (foundBanned.length > 0) {
+    flags.push({ type: "banned_words", severity: "high", message: `Qadağan sözlər: "${foundBanned.join('", "')}"` });
+  }
+
+  // 7. Aşağı keyfiyyət (çox qısa təsvir)
+  if (ad.description.length < 20) {
+    flags.push({ type: "low_quality", severity: "low", message: "Təsvir çox qısadır (min. 20 simvol tövsiyə olunur)" });
+  }
+
+  // 8. Saxta əlaqə
+  if (ad.userPhone && /(\d)\1{6,}/.test(ad.userPhone.replace(/\D/g, ""))) {
+    flags.push({ type: "fake_contact", severity: "high", message: "Telefon nömrəsi saxta görünür" });
+  }
+
+  const highCount = flags.filter(f => f.severity === "high").length;
+  const medCount = flags.filter(f => f.severity === "medium").length;
+  const score = Math.max(0, 100 - highCount * 30 - medCount * 15 - flags.filter(f => f.severity === "low").length * 5);
+
+  return { passed: highCount === 0, score, flags };
+}
 
 interface Ad {
   id: number;
@@ -26,6 +113,7 @@ interface Ad {
   date: string;
   aiFlag: boolean;
   aiReason?: string;
+  aiCheck?: AiCheckResult;
   description: string;
   location: string;
   images: string[];
@@ -63,9 +151,9 @@ const mockAds: Ad[] = Array.from({ length: 25 }, (_, i) => ({
   aiFlag: i % 5 === 0,
   aiReason: i % 5 === 0 ? ["Şübhəli qiymət — bazar dəyərindən 70% aşağı", "Dublikat elan — #10032 ilə eyni", "Spam sözlər aşkarlandı", "Uyğunsuz şəkil aşkarlandı", "Saxta əlaqə nömrəsi"][i % 5] : undefined,
   description: [
-    "Mercedes-Benz C220d, 2019-cu il buraxılış, 45.000 km yürüş, dizel mühərrik, avtomatik sürətlər qutusu. Tam texniki baxışdan keçib.",
+    "Mercedes-Benz C220d, 2019-cu il buraxılış, 45.000 km yürüş, dizel mühərrik, avtomatik sürətlər qutusu. Tam texniki baxışdan keçib. Zəng edin +994 50 300 20 40",
     "Nəsimi rayonu, 28 May metrosuna yaxın. 16/9 mərtəbə, sahə 90 m², 3 otaq, təmirli. Qaz, su, işıq daimi.",
-    "iPhone 15 Pro Max, 256GB, Natural Titanium rəngi. Yeni, qutuda. Apple Azərbaycan zəmanəti 1 il.",
+    "iPhone 15 Pro Max, 256GB, Natural Titanium rəngi. Yeni, qutuda. Tələsin son şans! Maraqlananlar whatsapp yazın.",
     "Samsung 55 düym QLED 4K Smart TV. 2024-cü il modeli. Zəmanət 2 il.",
     "BMW X5 xDrive30d M Sport paket, 2021, 32.000 km. Panorama, Harman Kardon, head-up display.",
   ][i % 5],
@@ -75,7 +163,7 @@ const mockAds: Ad[] = Array.from({ length: 25 }, (_, i) => ({
   featured: i % 6 === 0,
   promotion: ([null, "vip", null, "premium", null, "ireli", null, null, null, null] as const)[i % 10],
   promotionExpiry: i % 4 === 1 ? "2026-04-" + String(5 + i).padStart(2, "0") : undefined,
-}));
+}))
 
 const promotionConfig = {
   vip: { label: "VIP", icon: Crown, color: "bg-admin-accent/15 text-admin-accent", price: "5 ₼/gün" },
@@ -361,7 +449,40 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject, onEdit, onProm
         </DialogHeader>
 
         <div className="space-y-5">
-          {ad.aiFlag && ad.aiReason && (
+          {/* AI Check Results */}
+          {ad.aiCheck && (
+            <div className={cn("rounded-lg border p-3 space-y-2", ad.aiCheck.passed ? "bg-admin-success/5 border-admin-success/20" : "bg-admin-danger/5 border-admin-danger/20")}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className={ad.aiCheck.passed ? "text-admin-success" : "text-admin-danger"} />
+                  <span className="text-sm font-medium">{ad.aiCheck.passed ? "AI Filtr: Keçdi ✓" : "AI Filtr: Problem aşkarlandı"}</span>
+                </div>
+                <span className={cn("text-xs font-bold px-2 py-0.5 rounded", ad.aiCheck.score >= 70 ? "bg-admin-success/10 text-admin-success" : ad.aiCheck.score >= 40 ? "bg-admin-warning/10 text-admin-warning" : "bg-admin-danger/10 text-admin-danger")}>
+                  {ad.aiCheck.score}/100
+                </span>
+              </div>
+              <Progress value={ad.aiCheck.score} className="h-1.5" />
+              {ad.aiCheck.flags.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  {ad.aiCheck.flags.map((flag, idx) => {
+                    const cfg = flagConfig[flag.type];
+                    return (
+                      <div key={idx} className="flex items-start gap-2 text-xs">
+                        <cfg.icon size={12} className={cn("mt-0.5 shrink-0", cfg.color)} />
+                        <div>
+                          <span className={cn("font-medium", cfg.color)}>{cfg.label}</span>
+                          <span className={cn("ml-1 px-1 rounded text-[9px]", flag.severity === "high" ? "bg-admin-danger/10 text-admin-danger" : flag.severity === "medium" ? "bg-admin-warning/10 text-admin-warning" : "bg-muted text-muted-foreground")}>{flag.severity === "high" ? "yüksək" : flag.severity === "medium" ? "orta" : "aşağı"}</span>
+                          <p className="text-muted-foreground mt-0.5">{flag.message}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {ad.aiFlag && ad.aiReason && !ad.aiCheck && (
             <div className="bg-admin-warning/5 border border-admin-warning/20 rounded-lg p-3 flex items-start gap-2">
               <Bot size={16} className="text-admin-warning mt-0.5 shrink-0" />
               <div>
@@ -479,6 +600,58 @@ export default function ElanlarPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [promotionFilter, setPromotionFilter] = useState("all");
   const [searchParams] = useSearchParams();
+  const [aiScanning, setAiScanning] = useState(false);
+  const [aiScanProgress, setAiScanProgress] = useState(0);
+  const [aiScanDone, setAiScanDone] = useState(false);
+
+  const handleAiScan = useCallback(() => {
+    const pendingAds = ads.filter(a => a.status === "gozlemede");
+    if (pendingAds.length === 0) {
+      toast({ title: "ℹ️ Gözləmədə elan yoxdur" });
+      return;
+    }
+    setAiScanning(true);
+    setAiScanProgress(0);
+
+    let processed = 0;
+    const total = pendingAds.length;
+
+    const interval = setInterval(() => {
+      processed++;
+      setAiScanProgress(Math.round((processed / total) * 100));
+
+      if (processed >= total) {
+        clearInterval(interval);
+        setAds(prev => prev.map(ad => {
+          if (ad.status !== "gozlemede") return ad;
+          const check = runAiCheck(ad, prev);
+          return { ...ad, aiCheck: check, aiFlag: !check.passed, aiReason: check.flags.length > 0 ? check.flags[0].message : undefined };
+        }));
+        setAiScanning(false);
+        setAiScanDone(true);
+
+        const results = pendingAds.map(ad => runAiCheck(ad, ads));
+        const passedCount = results.filter(r => r.passed).length;
+        const failedCount = results.filter(r => !r.passed).length;
+
+        toast({
+          title: "🤖 AI Filtrasiya tamamlandı",
+          description: `${total} elan yoxlanıldı: ${passedCount} keçdi, ${failedCount} problemli`,
+        });
+      }
+    }, 300);
+  }, [ads]);
+
+  // Auto-approve clean ads
+  const handleAutoApprove = useCallback(() => {
+    const cleanAds = ads.filter(a => a.status === "gozlemede" && a.aiCheck?.passed);
+    if (cleanAds.length === 0) {
+      toast({ title: "ℹ️ Avtomatik təsdiq üçün təmiz elan yoxdur" });
+      return;
+    }
+    setAds(prev => prev.map(a => cleanAds.some(c => c.id === a.id) ? { ...a, status: "aktiv" as const } : a));
+    toast({ title: "✅ Avtomatik təsdiq", description: `${cleanAds.length} təmiz elan avtomatik təsdiqləndi` });
+  }, [ads]);
 
   useEffect(() => {
     const status = searchParams.get("status");
@@ -572,7 +745,47 @@ export default function ElanlarPage() {
               <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Gözləmədəki elanları nəzərdən keçirin</p>
             </div>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setStatusFilter("gozlemede")} className="border-admin-warning/30 text-admin-warning hover:bg-admin-warning/5 text-[10px] sm:text-xs h-7 sm:h-8 shrink-0">Göstər</Button>
+          <div className="flex gap-1.5 shrink-0">
+            <Button size="sm" variant="outline" onClick={() => setStatusFilter("gozlemede")} className="border-admin-warning/30 text-admin-warning hover:bg-admin-warning/5 text-[10px] sm:text-xs h-7 sm:h-8">Göstər</Button>
+            <Button size="sm" onClick={handleAiScan} disabled={aiScanning} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90 text-[10px] sm:text-xs h-7 sm:h-8">
+              {aiScanning ? <><Loader2 size={12} className="mr-1 animate-spin" /> Yoxlanır...</> : <><Bot size={12} className="mr-1" /> AI Filtr</>}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Scan Progress */}
+      {aiScanning && (
+        <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg p-3 space-y-2 animate-fade-in">
+          <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-2"><Bot size={14} className="text-admin-accent" /> AI filtrasiya davam edir...</span>
+            <span className="text-xs font-mono">{aiScanProgress}%</span>
+          </div>
+          <Progress value={aiScanProgress} className="h-2" />
+          <p className="text-[10px] text-muted-foreground">Spam, təkrar elan, nömrə aşkarlanması, qiymət analizi yoxlanılır...</p>
+        </div>
+      )}
+
+      {/* AI Scan Results Summary */}
+      {aiScanDone && !aiScanning && (
+        <div className="bg-admin-success/5 border border-admin-success/20 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldCheck size={16} className="text-admin-success shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium">
+                AI Filtrasiya nəticəsi: {ads.filter(a => a.status === "gozlemede" && a.aiCheck?.passed).length} təmiz, {ads.filter(a => a.status === "gozlemede" && a.aiCheck && !a.aiCheck.passed).length} problemli
+              </p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Təmiz elanları avtomatik təsdiqləyə bilərsiniz</p>
+            </div>
+          </div>
+          <div className="flex gap-1.5 shrink-0">
+            <Button size="sm" onClick={handleAutoApprove} className="bg-admin-success text-primary-foreground hover:bg-admin-success/90 text-[10px] sm:text-xs h-7 sm:h-8">
+              <Check size={12} className="mr-1" /> Təmizləri təsdiqlə
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setAiScanDone(false)} className="h-7 sm:h-8 text-[10px]">
+              <X size={12} />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -718,7 +931,16 @@ export default function ElanlarPage() {
                   ) : <span className="text-[10px] text-muted-foreground">—</span>}
                 </td>
                 <td className="px-2 py-2 text-muted-foreground tabular-nums text-[11px]">{ad.views > 999 ? `${(ad.views/1000).toFixed(0)}K` : ad.views}</td>
-                <td className="px-2 py-2"><StatusBadge status={ad.status} /></td>
+                <td className="px-2 py-2">
+                  <div className="flex items-center gap-1">
+                    <StatusBadge status={ad.status} />
+                    {ad.aiCheck && (
+                      <span className={cn("text-[8px] font-bold px-1 rounded", ad.aiCheck.score >= 70 ? "bg-admin-success/10 text-admin-success" : ad.aiCheck.score >= 40 ? "bg-admin-warning/10 text-admin-warning" : "bg-admin-danger/10 text-admin-danger")}>
+                        {ad.aiCheck.score}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-2 py-2 text-muted-foreground text-[10px] whitespace-nowrap">{ad.date}</td>
                 <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-px">

@@ -465,8 +465,20 @@ export default function IstifadecilerPage() {
             <SelectItem value="blok">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        {(roleFilter !== "all" || statusFilter !== "all" || searchQuery) && (
-          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setRoleFilter("all"); setStatusFilter("all"); setSearchQuery(""); }}>
+        <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={d => { setDateFrom(d); setCurrentPage(1); }} onDateToChange={d => { setDateTo(d); setCurrentPage(1); }} />
+        <ExcelExportButton onClick={() => exportToExcel(filtered, [
+          { key: "id", label: "ID" },
+          { key: "name", label: "Ad" },
+          { key: "email", label: "Email" },
+          { key: "phone", label: "Telefon" },
+          { key: "ads", label: "Elan sayı" },
+          { key: "date", label: "Qeydiyyat" },
+          { key: "role", label: "Rol" },
+          { key: "status", label: "Status" },
+          { key: "totalSpent", label: "Xərc" },
+        ], "istifadeciler")} />
+        {(roleFilter !== "all" || statusFilter !== "all" || searchQuery || dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setRoleFilter("all"); setStatusFilter("all"); setSearchQuery(""); setDateFrom(undefined); setDateTo(undefined); }}>
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}
@@ -478,13 +490,13 @@ export default function IstifadecilerPage() {
         <table className="min-w-[850px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 font-medium w-[50px]">ID</th>
-              <th className="p-3 font-medium">Ad</th>
-              <th className="p-3 font-medium">Email</th>
+              <SortableHeader label="ID" sortKey="id" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[50px]" />
+              <SortableHeader label="Ad" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Email" sortKey="email" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium w-[120px]">Telefon</th>
-              <th className="p-3 font-medium w-[50px]">Elan</th>
-              <th className="p-3 font-medium w-[85px]">Qeydiyyat</th>
-              <th className="p-3 font-medium w-[75px]">Rol</th>
+              <SortableHeader label="Elan" sortKey="ads" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[50px]" />
+              <SortableHeader label="Qeydiyyat" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[85px]" />
+              <SortableHeader label="Rol" sortKey="role" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[75px]" />
               <th className="p-3 font-medium w-[70px]">Status</th>
               <th className="p-3 font-medium w-[120px]">Əməliyyat</th>
             </tr>

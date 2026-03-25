@@ -526,9 +526,12 @@ export default function MagazalarPage() {
             <SelectItem value="premium">Premium</SelectItem>
           </SelectContent>
         </Select>
-        <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
-          <Search size={14} className="mr-1" /> Axtar
-        </Button>
+        <ExcelExportButton onClick={() => exportToExcel(filtered, [
+          { key: "id", label: "ID" }, { key: "name", label: "Mağaza" }, { key: "owner", label: "Sahib" },
+          { key: "category", label: "Kateqoriya" }, { key: "location", label: "Lokasiya" },
+          { key: "adsCount", label: "Elanlar" }, { key: "rating", label: "Reytinq" },
+          { key: "plan", label: "Plan" }, { key: "status", label: "Status" },
+        ], "magazalar")} />
         {(statusFilter !== "all" || planFilter !== "all" || searchQuery) && (
           <Button size="sm" variant="ghost" onClick={() => { setStatusFilter("all"); setPlanFilter("all"); setSearchQuery(""); }} className="text-xs">
             <X size={12} className="mr-1" /> Sıfırla
@@ -541,13 +544,13 @@ export default function MagazalarPage() {
         <table className="min-w-[900px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 font-medium w-[50px]">ID</th>
-              <th className="p-3 font-medium">Mağaza</th>
-              <th className="p-3 font-medium w-[100px]">Sahib</th>
-              <th className="p-3 font-medium w-[90px]">Kateqoriya</th>
-              <th className="p-3 font-medium w-[90px]">Lokasiya</th>
-              <th className="p-3 font-medium w-[55px]">Elanlar</th>
-              <th className="p-3 font-medium w-[60px]">Reytinq</th>
+              <SortableHeader label="ID" sortKey="id" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[50px]" />
+              <SortableHeader label="Mağaza" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Sahib" sortKey="owner" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[100px]" />
+              <SortableHeader label="Kateqoriya" sortKey="category" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[90px]" />
+              <SortableHeader label="Lokasiya" sortKey="location" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[90px]" />
+              <SortableHeader label="Elanlar" sortKey="adsCount" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[55px]" />
+              <SortableHeader label="Reytinq" sortKey="rating" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[60px]" />
               <th className="p-3 font-medium w-[65px]">Plan</th>
               <th className="p-3 font-medium w-[70px]">Status</th>
               <th className="p-3 font-medium w-[110px]">Əməliyyat</th>

@@ -221,7 +221,7 @@ function PlanUpgradeDialog({ shop, open, onClose, onUpgrade }: {
   );
 }
 
-function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, onEdit }: {
+function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, onEdit, onUpgrade }: {
   shop: Shop | null;
   open: boolean;
   onClose: () => void;
@@ -229,6 +229,7 @@ function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, o
   onReject: (id: number) => void;
   onBlock: (id: number) => void;
   onEdit: (shop: Shop) => void;
+  onUpgrade: (shop: Shop) => void;
 }) {
   if (!shop) return null;
 

@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X, Edit, Store, MapPin, Phone, Mail, Globe, Star, ShoppingBag, Calendar, Plus } from "lucide-react";
+import { Search, Eye, Check, X, Edit, Store, MapPin, Phone, Mail, Globe, Star, ShoppingBag, Calendar, Plus, Crown, ArrowUpRight, Zap, Shield } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { ShopFormDialog } from "@/components/admin/ShopFormDialog";
+import { cn } from "@/lib/utils";
 
 interface Shop {
   id: number;
@@ -71,7 +72,156 @@ const planColor: Record<string, string> = {
   Premium: "bg-admin-accent/15 text-admin-accent",
 };
 
-function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, onEdit }: {
+const planConfig = [
+  {
+    name: "Pulsuz" as const,
+    icon: Store,
+    price: "0 ₼/ay",
+    color: "border-border",
+    features: ["5 elan limiti", "Standart axtarış", "Əsas profil", "Email dəstək"],
+    missing: ["Prioritet sıralama", "VIP nişanı", "Analitika", "Banner reklam", "API girişi"],
+  },
+  {
+    name: "Biznes" as const,
+    icon: Zap,
+    price: "29 ₼/ay",
+    color: "border-admin-info",
+    popular: true,
+    features: ["50 elan limiti", "Prioritet sıralama", "Genişlənmiş profil", "Analitika paneli", "Telefon dəstək", "Sosial media inteqrasiya"],
+    missing: ["VIP nişanı", "Banner reklam", "API girişi"],
+  },
+  {
+    name: "Premium" as const,
+    icon: Crown,
+    price: "79 ₼/ay",
+    color: "border-admin-accent",
+    features: ["Limitsiz elan", "VIP nişanı", "Banner reklam", "Tam analitika", "API girişi", "24/7 dəstək", "Prioritet göstərilmə", "AI alətlər"],
+    missing: [],
+  },
+];
+
+function PlanUpgradeDialog({ shop, open, onClose, onUpgrade }: {
+  shop: Shop | null;
+  open: boolean;
+  onClose: () => void;
+  onUpgrade: (id: number, plan: Shop["plan"]) => void;
+}) {
+  const [selectedPlan, setSelectedPlan] = useState<Shop["plan"] | null>(null);
+
+  if (!shop) return null;
+
+  const currentIndex = planConfig.findIndex((p) => p.name === shop.plan);
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Crown size={18} className="text-admin-accent" />
+            Paket Yüksəltmə — {shop.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="mb-4 p-3 bg-muted/30 rounded-lg flex items-center gap-3">
+          <Store size={16} className="text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">{shop.name}</p>
+            <p className="text-xs text-muted-foreground">Cari plan: <span className={cn("font-semibold px-1.5 py-0.5 rounded text-[10px]", planColor[shop.plan])}>{shop.plan}</span></p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {planConfig.map((plan, idx) => {
+            const isCurrent = plan.name === shop.plan;
+            const isDowngrade = idx < currentIndex;
+            const isSelected = selectedPlan === plan.name;
+
+            return (
+              <div
+                key={plan.name}
+                onClick={() => !isCurrent && !isDowngrade && setSelectedPlan(plan.name)}
+                className={cn(
+                  "relative rounded-xl border-2 p-4 transition-all cursor-pointer",
+                  plan.color,
+                  isSelected && "ring-2 ring-primary shadow-lg",
+                  isCurrent && "opacity-60 cursor-default",
+                  isDowngrade && "opacity-40 cursor-not-allowed",
+                  plan.popular && !isCurrent && "shadow-md"
+                )}
+              >
+                {plan.popular && (
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-admin-info text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full">
+                    Populyar
+                  </span>
+                )}
+                <div className="text-center mb-3">
+                  <plan.icon size={24} className={cn(
+                    "mx-auto mb-2",
+                    plan.name === "Pulsuz" ? "text-muted-foreground" : plan.name === "Biznes" ? "text-admin-info" : "text-admin-accent"
+                  )} />
+                  <h3 className="font-bold text-sm">{plan.name}</h3>
+                  <p className="text-lg font-bold mt-1">{plan.price}</p>
+                </div>
+
+                <div className="space-y-1.5 mb-4">
+                  {plan.features.map((f) => (
+                    <div key={f} className="flex items-center gap-1.5 text-xs">
+                      <Check size={12} className="text-admin-success shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                  {plan.missing.map((f) => (
+                    <div key={f} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <X size={12} className="shrink-0" />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {isCurrent ? (
+                  <div className="text-center py-1.5 text-xs font-medium text-muted-foreground bg-muted rounded-lg">Cari plan</div>
+                ) : isDowngrade ? (
+                  <div className="text-center py-1.5 text-xs font-medium text-muted-foreground bg-muted rounded-lg">Endirilə bilməz</div>
+                ) : (
+                  <Button
+                    size="sm"
+                    className={cn(
+                      "w-full text-xs",
+                      isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground hover:bg-muted/80"
+                    )}
+                    onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan.name); }}
+                  >
+                    {isSelected ? "✓ Seçildi" : "Seç"}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="flex justify-between pt-3 border-t border-border mt-2">
+          <Button variant="outline" size="sm" onClick={onClose}>Ləğv et</Button>
+          <Button
+            size="sm"
+            disabled={!selectedPlan}
+            className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90"
+            onClick={() => {
+              if (selectedPlan) {
+                onUpgrade(shop.id, selectedPlan);
+                onClose();
+              }
+            }}
+          >
+            <ArrowUpRight size={14} className="mr-1" />
+            {selectedPlan ? `${selectedPlan} planına yüksəlt` : "Plan seçin"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, onEdit, onUpgrade }: {
   shop: Shop | null;
   open: boolean;
   onClose: () => void;
@@ -79,6 +229,7 @@ function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, o
   onReject: (id: number) => void;
   onBlock: (id: number) => void;
   onEdit: (shop: Shop) => void;
+  onUpgrade: (shop: Shop) => void;
 }) {
   if (!shop) return null;
 
@@ -186,6 +337,11 @@ function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, o
               </Button>
             )}
             <Button variant="outline" onClick={() => onEdit(shop)}><Edit size={14} className="mr-1" /> Redaktə et</Button>
+            {shop.plan !== "Premium" && (
+              <Button variant="outline" className="border-admin-accent/30 text-admin-accent hover:bg-admin-accent/5" onClick={() => onUpgrade(shop)}>
+                <Crown size={14} className="mr-1" /> Paket yüksəlt
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
@@ -201,6 +357,7 @@ export default function MagazalarPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editShop, setEditShop] = useState<Shop | null>(null);
   const [planFilter, setPlanFilter] = useState("all");
+  const [upgradeShop, setUpgradeShop] = useState<Shop | null>(null);
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
@@ -436,6 +593,19 @@ export default function MagazalarPage() {
         onReject={handleReject}
         onBlock={handleBlock}
         onEdit={openEdit}
+        onUpgrade={(shop) => { setDetailShop(null); setUpgradeShop(shop); }}
+      />
+
+      {/* Plan Upgrade Dialog */}
+      <PlanUpgradeDialog
+        shop={upgradeShop}
+        open={!!upgradeShop}
+        onClose={() => setUpgradeShop(null)}
+        onUpgrade={(id, plan) => {
+          setShops((prev) => prev.map((s) => s.id === id ? { ...s, plan } : s));
+          toast({ title: "🎉 Paket yüksəldildi", description: `Mağaza #${id} ${plan} planına yüksəldildi` });
+          setUpgradeShop(null);
+        }}
       />
 
       {/* Create Dialog */}

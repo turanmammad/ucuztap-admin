@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
-import { Upload, X, Plus, Clock, Instagram, Facebook, Globe, Phone, Trash2, Store } from "lucide-react";
+import { Upload, X, Plus, Clock, Instagram, Facebook, Globe, Phone, Trash2, Store, Sparkles, Wand2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface WorkHour {
@@ -16,7 +16,7 @@ interface WorkHour {
   closed: boolean;
 }
 
-interface ShopFormData {
+export interface ShopFormData {
   name: string;
   description: string;
   category: string;
@@ -63,11 +63,77 @@ interface ShopFormDialogProps {
 
 const formTabs = ["Əsas", "İş saatları", "Sosial media", "Görünüş"];
 
+// Auto-fill templates based on category
+const autoFillTemplates: Record<string, Partial<ShopFormData>> = {
+  "Nəqliyyat": {
+    description: "Azərbaycanda ən etibarlı avtomobil satış mərkəzi. Geniş çeşid, sərfəli qiymətlər və zəmanətli xidmət. Hər büdcəyə uyğun nəqliyyat vasitələri mövcuddur.",
+    address: "Heydər Əliyev prospekti 120",
+    phone: "+994 50 555 55 55",
+    email: "info@avtosalon.az",
+    website: "https://avtosalon.az",
+    instagram: "@avtosalon_az",
+    facebook: "facebook.com/avtosalon.az",
+    whatsapp: "+994 50 555 55 55",
+  },
+  "Elektronika": {
+    description: "Ən son texnologiya məhsulları. Apple, Samsung, Xiaomi və digər brendlərin rəsmi distribütoru. Zəmanət və servis xidməti mövcuddur.",
+    address: "28 May küçəsi 42",
+    phone: "+994 55 444 44 44",
+    email: "info@techstore.az",
+    website: "https://techstore.az",
+    instagram: "@techstore_az",
+    facebook: "facebook.com/techstore.az",
+    whatsapp: "+994 55 444 44 44",
+  },
+  "Daşınmaz əmlak": {
+    description: "Bakının ən etibarlı daşınmaz əmlak agentliyi. Mənzil, villa, ofis və torpaq sahələrinin alqı-satqısı və icarəsi. 10+ illik təcrübə.",
+    address: "Nizami küçəsi 88",
+    phone: "+994 70 333 33 33",
+    email: "info@emlak.az",
+    website: "https://emlak.az",
+    instagram: "@emlak_az",
+    facebook: "facebook.com/emlak.az",
+    whatsapp: "+994 70 333 33 33",
+  },
+  "Ev və bağ": {
+    description: "Keyfiyyətli mebel, dekor və bağ aksesuarları. Müasir dizayn, ən yaxşı materiallar. Pulsuz çatdırılma və quraşdırma xidməti.",
+    address: "Tbilisi prospekti 55",
+    phone: "+994 51 222 22 22",
+    email: "info@evimbag.az",
+    website: "https://evimbag.az",
+    instagram: "@evimbag_az",
+    facebook: "facebook.com/evimbag.az",
+    whatsapp: "+994 51 222 22 22",
+  },
+  "Xidmətlər": {
+    description: "Peşəkar xidmət komandası. Təmir, təmizlik, nəqliyyat və digər xidmətlər. Keyfiyyətli iş, münasib qiymətlər.",
+    address: "Bakıxanov küçəsi 30",
+    phone: "+994 55 111 11 11",
+    email: "info@xidmet.az",
+    website: "https://xidmet.az",
+    instagram: "@xidmet_az",
+    facebook: "facebook.com/xidmet.az",
+    whatsapp: "+994 55 111 11 11",
+  },
+  "Geyim": {
+    description: "Ən son moda trendləri. Kişi, qadın və uşaq geyimləri. Dünya brendləri və yerli istehsal. Hər büdcəyə uyğun seçimlər.",
+    address: "Fountains Square, Park Bulvar",
+    phone: "+994 50 777 77 77",
+    email: "info@fashion.az",
+    website: "https://fashion.az",
+    instagram: "@fashion_az",
+    facebook: "facebook.com/fashion.az",
+    whatsapp: "+994 50 777 77 77",
+  },
+};
+
 export function ShopFormDialog({ open, onClose, onSave, editData, title }: ShopFormDialogProps) {
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState<ShopFormData>(() => editData ? { ...emptyForm, ...editData } : { ...emptyForm, workHours: defaultWorkHours.map((h) => ({ ...h })) });
   const logoRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [autoFilling, setAutoFilling] = useState(false);
 
   const update = <K extends keyof ShopFormData>(key: K, value: ShopFormData[K]) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -88,6 +154,92 @@ export function ShopFormDialog({ open, onClose, onSave, editData, title }: ShopF
     const reader = new FileReader();
     reader.onload = () => update(field, reader.result as string);
     reader.readAsDataURL(file);
+  };
+
+  const handleAutoFill = () => {
+    if (!form.category) {
+      toast({ title: "⚠️ Kateqoriya seçin", description: "Auto-doldurma üçün əvvəlcə kateqoriya seçilməlidir", variant: "destructive" });
+      return;
+    }
+    setAutoFilling(true);
+    setTimeout(() => {
+      const template = autoFillTemplates[form.category] || autoFillTemplates["Xidmətlər"];
+      const shopName = form.name || `${form.category} Mağazası`;
+      setForm((f) => ({
+        ...f,
+        ...template,
+        name: f.name || shopName,
+        location: f.location || "Bakı, Nəsimi",
+      }));
+      setAutoFilling(false);
+      toast({ title: "✨ Auto-doldurma tamamlandı", description: "Məlumatlar AI tərəfindən dolduruldu. Dəyişiklik edə bilərsiniz." });
+    }, 1500);
+  };
+
+  const handleAiBanner = () => {
+    if (!form.name && !form.category) {
+      toast({ title: "⚠️ Məlumat lazımdır", description: "Banner yaratmaq üçün mağaza adı və ya kateqoriya daxil edin", variant: "destructive" });
+      return;
+    }
+    setAiGenerating(true);
+    // Simulate AI banner generation with a gradient canvas
+    setTimeout(() => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 300;
+      const ctx = canvas.getContext("2d")!;
+
+      // Generate gradient based on category
+      const gradients: Record<string, [string, string]> = {
+        "Nəqliyyat": ["#1e3a5f", "#2d6a9f"],
+        "Elektronika": ["#1a1a2e", "#4a00e0"],
+        "Daşınmaz əmlak": ["#2d3436", "#636e72"],
+        "Ev və bağ": ["#134e5e", "#71b280"],
+        "Xidmətlər": ["#373b44", "#4286f4"],
+        "Geyim": ["#434343", "#000000"],
+      };
+      const [c1, c2] = gradients[form.category] || ["#667eea", "#764ba2"];
+      const grad = ctx.createLinearGradient(0, 0, 1200, 300);
+      grad.addColorStop(0, c1);
+      grad.addColorStop(1, c2);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1200, 300);
+
+      // Add subtle pattern
+      ctx.globalAlpha = 0.05;
+      for (let i = 0; i < 20; i++) {
+        ctx.beginPath();
+        ctx.arc(Math.random() * 1200, Math.random() * 300, Math.random() * 80 + 20, 0, Math.PI * 2);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // Add shop name
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 48px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(form.name || "Mağaza", 600, 160);
+
+      // Add category
+      ctx.font = "20px system-ui, sans-serif";
+      ctx.globalAlpha = 0.8;
+      ctx.fillText(form.category || "", 600, 200);
+
+      // Add decorative line
+      ctx.globalAlpha = 0.4;
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(400, 230);
+      ctx.lineTo(800, 230);
+      ctx.stroke();
+
+      const dataUrl = canvas.toDataURL("image/png");
+      update("bannerPreview", dataUrl);
+      setAiGenerating(false);
+      toast({ title: "🎨 AI Banner yaradıldı", description: "Banner uğurla generasiya edildi" });
+    }, 2000);
   };
 
   const handleSave = () => {
@@ -140,6 +292,30 @@ export function ShopFormDialog({ open, onClose, onSave, editData, title }: ShopF
           {/* Tab 0: Əsas */}
           {tab === 0 && (
             <div className="space-y-4 animate-fade-in">
+              {/* Auto-fill button */}
+              <div className="flex items-center justify-between p-3 bg-primary/5 border border-primary/10 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Wand2 size={16} className="text-primary" />
+                  <div>
+                    <p className="text-xs font-medium">AI Auto-doldurma</p>
+                    <p className="text-[10px] text-muted-foreground">Kateqoriyaya uyğun bütün sahələri avtomatik doldurun</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAutoFill}
+                  disabled={autoFilling}
+                  className="text-xs"
+                >
+                  {autoFilling ? (
+                    <><Loader2 size={12} className="mr-1 animate-spin" /> Doldurulur...</>
+                  ) : (
+                    <><Sparkles size={12} className="mr-1" /> Auto-doldur</>
+                  )}
+                </Button>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="text-sm font-medium">Mağaza adı *</label>
@@ -228,19 +404,9 @@ export function ShopFormDialog({ open, onClose, onSave, editData, title }: ShopF
                     <span className="text-xs text-muted-foreground">Bağlı</span>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="time"
-                        value={h.open}
-                        onChange={(e) => updateWorkHour(i, "open", e.target.value)}
-                        className="h-8 w-[110px] text-xs"
-                      />
+                      <Input type="time" value={h.open} onChange={(e) => updateWorkHour(i, "open", e.target.value)} className="h-8 w-[110px] text-xs" />
                       <span className="text-muted-foreground text-xs">—</span>
-                      <Input
-                        type="time"
-                        value={h.close}
-                        onChange={(e) => updateWorkHour(i, "close", e.target.value)}
-                        className="h-8 w-[110px] text-xs"
-                      />
+                      <Input type="time" value={h.close} onChange={(e) => updateWorkHour(i, "close", e.target.value)} className="h-8 w-[110px] text-xs" />
                     </div>
                   )}
                 </div>
@@ -328,13 +494,36 @@ export function ShopFormDialog({ open, onClose, onSave, editData, title }: ShopF
 
               {/* Banner */}
               <div>
-                <label className="text-sm font-medium">Banner şəkli</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium">Banner şəkli</label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAiBanner}
+                    disabled={aiGenerating}
+                    className="text-xs h-7"
+                  >
+                    {aiGenerating ? (
+                      <><Loader2 size={12} className="mr-1 animate-spin" /> Generasiya edilir...</>
+                    ) : (
+                      <><Sparkles size={12} className="mr-1" /> AI ilə yarat</>
+                    )}
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground mb-2">Tövsiyə olunan ölçü: 1200×300 px, PNG və ya JPG, maks 5MB</p>
                 <div
                   onClick={() => bannerRef.current?.click()}
-                  className="w-full h-32 rounded-xl border-2 border-dashed border-border hover:border-admin-accent/50 flex items-center justify-center cursor-pointer transition-colors bg-muted/20 overflow-hidden"
+                  className={cn(
+                    "w-full h-32 rounded-xl border-2 border-dashed border-border hover:border-admin-accent/50 flex items-center justify-center cursor-pointer transition-colors bg-muted/20 overflow-hidden",
+                    aiGenerating && "pointer-events-none opacity-60"
+                  )}
                 >
-                  {form.bannerPreview ? (
+                  {aiGenerating ? (
+                    <div className="text-center">
+                      <Loader2 size={28} className="mx-auto text-primary animate-spin" />
+                      <span className="text-xs text-muted-foreground mt-2 block">AI banner hazırlayır...</span>
+                    </div>
+                  ) : form.bannerPreview ? (
                     <img src={form.bannerPreview} alt="Banner" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-center">
@@ -343,10 +532,15 @@ export function ShopFormDialog({ open, onClose, onSave, editData, title }: ShopF
                     </div>
                   )}
                 </div>
-                {form.bannerPreview && (
-                  <Button variant="ghost" size="sm" className="text-admin-danger mt-1" onClick={() => update("bannerPreview", null)}>
-                    <Trash2 size={14} className="mr-1" /> Banneri sil
-                  </Button>
+                {form.bannerPreview && !aiGenerating && (
+                  <div className="flex gap-2 mt-1">
+                    <Button variant="ghost" size="sm" className="text-admin-danger" onClick={() => update("bannerPreview", null)}>
+                      <Trash2 size={14} className="mr-1" /> Banneri sil
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleAiBanner} className="text-xs">
+                      <Sparkles size={14} className="mr-1" /> Yenidən yarat
+                    </Button>
+                  </div>
                 )}
                 <input ref={bannerRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={(e) => handleFileChange("bannerPreview", e)} />
               </div>

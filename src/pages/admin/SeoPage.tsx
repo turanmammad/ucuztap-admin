@@ -431,9 +431,34 @@ function SettingsTab() {
   const [schemaType, setSchemaType] = useState("Product");
   const [googleVerification, setGoogleVerification] = useState("google-verification-code-123");
   const [bingVerification, setBingVerification] = useState("");
+  const [yandexVerification, setYandexVerification] = useState("");
   const [analyticsId, setAnalyticsId] = useState("G-XXXXXXXXXX");
+  const [yandexMetrikaId, setYandexMetrikaId] = useState("");
   const [defaultTitle, setDefaultTitle] = useState("{elan_basliq} — ucuztap.az");
   const [defaultDesc, setDefaultDesc] = useState("{elan_basliq}. {kateqoriya} elanları ucuztap.az saytında. {qiymet}");
+
+  // Yandex connection status
+  const [yandexConnected, setYandexConnected] = useState(false);
+
+  const connectYandex = () => {
+    if (!yandexVerification.trim() && !yandexMetrikaId.trim()) {
+      toast({ title: "⚠ Yandex məlumatları boşdur", description: "Verification kodu və ya Metrika ID-ni daxil edin", variant: "destructive" });
+      return;
+    }
+    setYandexConnected(true);
+    toast({ title: "✅ Yandex qoşuldu", description: "Yandex Webmaster & Metrika uğurla aktivləşdirildi" });
+  };
+
+  // Generate head code
+  const headCodes: { service: string; code: string; active: boolean }[] = [
+    { service: "Google Search Console", code: googleVerification ? `<meta name="google-site-verification" content="${googleVerification}" />` : "", active: !!googleVerification },
+    { service: "Bing Webmaster", code: bingVerification ? `<meta name="msvalidate.01" content="${bingVerification}" />` : "", active: !!bingVerification },
+    { service: "Yandex Webmaster", code: yandexVerification ? `<meta name="yandex-verification" content="${yandexVerification}" />` : "", active: !!yandexVerification },
+    { service: "Google Analytics", code: analyticsId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${analyticsId}"></script>\n<script>\n  window.dataLayer = window.dataLayer || [];\n  function gtag(){dataLayer.push(arguments);}\n  gtag('js', new Date());\n  gtag('config', '${analyticsId}');\n</script>` : "", active: !!analyticsId },
+    { service: "Yandex Metrika", code: yandexMetrikaId ? `<script type="text/javascript">\n  (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};\n  m[i].l=1*new Date();\n  for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}\n  k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})\n  (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");\n  ym(${yandexMetrikaId}, "init", {\n    clickmap:true,\n    trackLinks:true,\n    accurateTrackBounce:true,\n    webvisor:true\n  });\n</script>\n<noscript><div><img src="https://mc.yandex.ru/watch/${yandexMetrikaId}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>` : "", active: !!yandexMetrikaId },
+  ];
+
+  const allActiveCode = headCodes.filter(c => c.active).map(c => `<!-- ${c.service} -->\n${c.code}`).join("\n\n");
 
   return (
     <div className="space-y-4">
@@ -456,9 +481,9 @@ function SettingsTab() {
         <h3 className="text-sm font-semibold flex items-center gap-1.5"><Globe size={14} className="text-admin-accent" /> İndeksləmə Tənzimləmələri</h3>
         <div className="space-y-3">
           {[
-            { label: "Yeni elanları avtomatik indeksləmə", desc: "Google-a yeni elan əlavə olunduqda xəbər verilir", value: indexNewPages, set: setIndexNewPages },
+            { label: "Yeni elanları avtomatik indeksləmə", desc: "Google & Yandex-ə yeni elan əlavə olunduqda xəbər verilir", value: indexNewPages, set: setIndexNewPages },
             { label: "Avtomatik canonical URL", desc: "Hər səhifəyə canonical tag avtomatik əlavə olunur", value: canonicalAuto, set: setCanonicalAuto },
-            { label: "Dinamik sitemap.xml", desc: "Sitemap yeni elanlarla avtomatik yenilənir", value: sitemapAuto, set: setSitemapAuto },
+            { label: "Dinamik sitemap.xml", desc: "Sitemap yeni elanlarla avtomatik yenilənir (Google & Yandex)", value: sitemapAuto, set: setSitemapAuto },
             { label: "OG Image avtomatik generasiya", desc: "Şəkli olmayan elanlar üçün OG image yaradılır", value: ogAutoGenerate, set: setOgAutoGenerate },
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between">
@@ -489,14 +514,103 @@ function SettingsTab() {
         </div>
       </div>
 
-      {/* Verification */}
-      <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+      {/* Verification & Analytics — Google + Bing + Yandex */}
+      <div className="bg-card rounded-lg border border-border p-4 space-y-4">
         <h3 className="text-sm font-semibold flex items-center gap-1.5"><Shield size={14} className="text-admin-accent" /> Verifikasiya & Analitika</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label className="text-xs font-medium">Google Search Console</label><Input value={googleVerification} onChange={e => setGoogleVerification(e.target.value)} className="mt-1 text-xs font-mono" /></div>
-          <div><label className="text-xs font-medium">Bing Webmaster</label><Input value={bingVerification} onChange={e => setBingVerification(e.target.value)} className="mt-1 text-xs font-mono" placeholder="Verification kodu" /></div>
-          <div><label className="text-xs font-medium">Google Analytics ID</label><Input value={analyticsId} onChange={e => setAnalyticsId(e.target.value)} className="mt-1 text-xs font-mono" /></div>
+        
+        {/* Google */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded bg-[#4285F4] flex items-center justify-center text-[9px] font-bold text-white">G</div>
+            <span className="text-xs font-semibold">Google</span>
+            {googleVerification && <span className="text-[9px] bg-admin-success/10 text-admin-success px-1.5 py-0.5 rounded font-medium">Qoşulub ✓</span>}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div><label className="text-xs font-medium">Search Console Verification</label><Input value={googleVerification} onChange={e => setGoogleVerification(e.target.value)} className="mt-1 text-xs font-mono" placeholder="google-site-verification kodu" /></div>
+            <div><label className="text-xs font-medium">Analytics ID</label><Input value={analyticsId} onChange={e => setAnalyticsId(e.target.value)} className="mt-1 text-xs font-mono" placeholder="G-XXXXXXXXXX" /></div>
+          </div>
         </div>
+
+        {/* Bing */}
+        <div className="space-y-2 border-t border-border pt-3">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded bg-[#008373] flex items-center justify-center text-[9px] font-bold text-white">B</div>
+            <span className="text-xs font-semibold">Bing</span>
+            {bingVerification && <span className="text-[9px] bg-admin-success/10 text-admin-success px-1.5 py-0.5 rounded font-medium">Qoşulub ✓</span>}
+          </div>
+          <div><label className="text-xs font-medium">Webmaster Verification</label><Input value={bingVerification} onChange={e => setBingVerification(e.target.value)} className="mt-1 text-xs font-mono" placeholder="msvalidate.01 kodu" /></div>
+        </div>
+
+        {/* Yandex */}
+        <div className="space-y-2 border-t border-border pt-3">
+          <div className="flex items-center gap-2">
+            <div className="w-5 h-5 rounded bg-[#FC3F1D] flex items-center justify-center text-[9px] font-bold text-white">Y</div>
+            <span className="text-xs font-semibold">Yandex</span>
+            {yandexConnected && <span className="text-[9px] bg-admin-success/10 text-admin-success px-1.5 py-0.5 rounded font-medium">Qoşulub ✓</span>}
+            {!yandexConnected && (yandexVerification || yandexMetrikaId) && <span className="text-[9px] bg-admin-warning/10 text-admin-warning px-1.5 py-0.5 rounded font-medium">Qoşulmayıb</span>}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium">Yandex Webmaster Verification</label>
+              <Input value={yandexVerification} onChange={e => setYandexVerification(e.target.value)} className="mt-1 text-xs font-mono" placeholder="yandex-verification kodu" />
+              <p className="text-[10px] text-muted-foreground mt-0.5">webmaster.yandex.com → Saytlar → Doğrulama → Meta tag</p>
+            </div>
+            <div>
+              <label className="text-xs font-medium">Yandex Metrika ID</label>
+              <Input value={yandexMetrikaId} onChange={e => setYandexMetrikaId(e.target.value)} className="mt-1 text-xs font-mono" placeholder="12345678" />
+              <p className="text-[10px] text-muted-foreground mt-0.5">metrika.yandex.com → Sayğac nömrəsi</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Button size="sm" className="h-7 text-[10px] bg-[#FC3F1D] text-white hover:bg-[#FC3F1D]/90" onClick={connectYandex}>
+              <Zap size={10} className="mr-1" /> Yandex-i qoş
+            </Button>
+            <p className="text-[10px] text-muted-foreground">Yandex Webmaster + Metrika eyni anda aktivləşir</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Generated Head Codes */}
+      <div className="bg-card rounded-lg border border-border p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold flex items-center gap-1.5"><Code size={14} className="text-admin-accent" /> Generasiya olunmuş HTML Head Kodları</h3>
+          <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => {
+            navigator.clipboard.writeText(allActiveCode);
+            toast({ title: "📋 Kodlar kopyalandı" });
+          }}>Hamısını kopyala</Button>
+        </div>
+        <p className="text-[10px] text-muted-foreground">Bu kodları saytınızın {"<head>"} bölməsinə əlavə edin. Qoşulmuş xidmətlər avtomatik generasiya olunur.</p>
+        
+        {/* Status badges */}
+        <div className="flex flex-wrap gap-1.5">
+          {headCodes.map(c => (
+            <span key={c.service} className={cn("text-[9px] px-2 py-0.5 rounded font-medium border",
+              c.active ? "bg-admin-success/10 text-admin-success border-admin-success/20" : "bg-muted text-muted-foreground border-border"
+            )}>
+              {c.active ? "✓" : "✗"} {c.service}
+            </span>
+          ))}
+        </div>
+
+        {/* Code blocks per service */}
+        {headCodes.filter(c => c.active).map(c => (
+          <div key={c.service} className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">{c.service}</span>
+              <Button size="sm" variant="ghost" className="h-5 text-[9px] px-2" onClick={() => {
+                navigator.clipboard.writeText(c.code);
+                toast({ title: `📋 ${c.service} kodu kopyalandı` });
+              }}>Kopyala</Button>
+            </div>
+            <pre className="bg-muted/50 rounded-md p-3 text-[10px] font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap border border-border">
+              {c.code}
+            </pre>
+          </div>
+        ))}
+
+        {headCodes.filter(c => c.active).length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-4">Heç bir xidmət qoşulmayıb. Yuxarıda verification kodlarını daxil edin.</p>
+        )}
       </div>
 
       {/* robots.txt */}

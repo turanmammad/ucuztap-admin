@@ -98,19 +98,21 @@ export default function OdenislerPage() {
     }
   };
 
-  const filtered = payments.filter(p => {
+  const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+  const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+
+  let filtered = payments.filter(p => {
     if (statusFilter !== "all" && p.status !== statusFilter) return false;
     if (serviceFilter !== "all" && p.service !== serviceFilter) return false;
     if (methodFilter !== "all" && p.method !== methodFilter) return false;
-    if (dateFilter === "today" && !p.date.startsWith("2026-03-25")) return false;
-    if (dateFilter === "week" && !["2026-03-25", "2026-03-24", "2026-03-23", "2026-03-22", "2026-03-21", "2026-03-20", "2026-03-19"].some(d => p.date.startsWith(d))) return false;
+    if (!isInDateRange(p.date, fromStr, toStr)) return false;
     if (searchQuery && !p.user.toLowerCase().includes(searchQuery.toLowerCase()) && !p.transactionId.toLowerCase().includes(searchQuery.toLowerCase()) && !p.userEmail.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
-  }).sort((a, b) => {
-    const mul = sortDir === "desc" ? -1 : 1;
-    if (sortBy === "amount") return (a.amount - b.amount) * mul;
-    return a.date.localeCompare(b.date) * mul;
   });
+
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof Payment, sortDir);
+  }
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
@@ -176,42 +178,30 @@ export default function OdenislerPage() {
               {methods.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={dateFilter} onValueChange={v => { setDateFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger className="w-[120px] h-9"><SelectValue placeholder="Tarix" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Hamısı</SelectItem>
-              <SelectItem value="today">Bu gün</SelectItem>
-              <SelectItem value="week">Bu həftə</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button size="sm" variant="outline" onClick={handleExport}><Download size={14} className="mr-1" /> CSV</Button>
-          {(statusFilter !== "all" || serviceFilter !== "all" || methodFilter !== "all" || dateFilter !== "all" || searchQuery) && (
-            <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setStatusFilter("all"); setServiceFilter("all"); setMethodFilter("all"); setDateFilter("all"); setSearchQuery(""); }}>
+          <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={d => { setDateFrom(d); setCurrentPage(1); }} onDateToChange={d => { setDateTo(d); setCurrentPage(1); }} />
+          <ExcelExportButton onClick={handleExcelExport} />
+          {(statusFilter !== "all" || serviceFilter !== "all" || methodFilter !== "all" || dateFrom || dateTo || searchQuery) && (
+            <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setStatusFilter("all"); setServiceFilter("all"); setMethodFilter("all"); setDateFrom(undefined); setDateTo(undefined); setSearchQuery(""); }}>
               <X size={12} className="mr-1" /> Sıfırla
             </Button>
           )}
         </div>
       </div>
 
-      <div className="text-xs text-muted-foreground flex items-center justify-between">
-        <span>{filtered.length} ödəniş tapıldı</span>
-        <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => { setSortBy(sortBy === "date" ? "amount" : "date"); setSortDir("desc"); }}>
-          <ArrowUpDown size={12} className="mr-1" /> {sortBy === "date" ? "Tarixə görə" : "Məbləğə görə"}
-        </Button>
-      </div>
+      <div className="text-xs text-muted-foreground">{filtered.length} ödəniş tapıldı</div>
 
       {/* Table */}
       <div className="bg-card rounded-lg border border-border overflow-x-auto">
         <table className="w-full text-sm" style={{ minWidth: 800 }}>
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30 text-xs">
-              <th className="p-3 font-medium">ID</th>
-              <th className="p-3 font-medium">İstifadəçi</th>
-              <th className="p-3 font-medium">Məbləğ</th>
-              <th className="p-3 font-medium">Xidmət</th>
+              <SortableHeader label="ID" sortKey="id" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="İstifadəçi" sortKey="user" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Məbləğ" sortKey="amount" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Xidmət" sortKey="service" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">Metod</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Tarix</th>
+              <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Tarix" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">TXN</th>
               <th className="p-3 font-medium">Əməliyyat</th>
             </tr>

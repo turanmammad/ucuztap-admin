@@ -70,7 +70,7 @@ function SeoTab() {
   const [fbPixel, setFbPixel] = useState("");
   const [canonical, setCanonical] = useState("https://ucuztap.az");
   const [robots, setRobots] = useState("index, follow");
-  const [ogImage, setOgImage] = useState("");
+  const [ogImage, setOgImage] = useState("/og-image.jpg");
   const [sitemap, setSitemap] = useState(true);
 
   return (
@@ -89,6 +89,14 @@ function SeoTab() {
         <div><label className="text-sm font-medium">Robots</label><Input value={robots} onChange={e => setRobots(e.target.value)} className="mt-1" /></div>
         <div><label className="text-sm font-medium">OG Image URL</label><Input placeholder="https://..." value={ogImage} onChange={e => setOgImage(e.target.value)} className="mt-1" /></div>
       </div>
+      {ogImage && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">OG Image önizləmə</label>
+          <div className="rounded-lg border border-border overflow-hidden max-w-md">
+            <img src={ogImage} alt="OG Image preview" className="w-full h-auto object-cover" />
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between py-2">
         <div><p className="text-sm font-medium">Sitemap avtomatik generasiya</p><p className="text-xs text-muted-foreground">sitemap.xml avtomatik yenilənsin</p></div>
         <Switch checked={sitemap} onCheckedChange={setSitemap} />

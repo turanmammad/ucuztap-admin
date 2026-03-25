@@ -883,6 +883,7 @@ export default function ReklamlarPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {([
+          { id: "requests", label: "Sorğular", count: requests.length },
           { id: "banners", label: "Bannerlər", count: banners.length },
           { id: "slots", label: "Banner Yerləri", count: slots.length },
           { id: "pricing", label: "Qiymət Siyahısı" },

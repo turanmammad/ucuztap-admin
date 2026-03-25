@@ -2,16 +2,152 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Eye, Edit, Ban, Mail, Search, X, Phone, Calendar, MapPin, CreditCard, FileText, Clock, Shield, Send, Save, User, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, Edit, Ban, Mail, Search, X, Phone, Calendar, MapPin, CreditCard, FileText, Clock, Shield, Send, Save, User, ChevronLeft, ChevronRight, Bot, AlertTriangle, TrendingDown, Zap, RefreshCw, ArrowDownRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { DateRangeFilter, ExcelExportButton } from "@/components/admin/TableToolbar";
 import { SortableHeader } from "@/components/admin/SortableHeader";
 import { exportToExcel, isInDateRange, sortData, nextSortDir, type SortDir } from "@/lib/table-utils";
 import { format } from "date-fns";
+
+// === AI Risk Analysis ===
+interface UserRiskFlag {
+  type: "many_rejected" | "spam_pattern" | "fast_posting" | "fake_info" | "complaint_target" | "duplicate_ads" | "banned_words" | "low_quality_pattern" | "multiple_accounts" | "price_manipulation";
+  severity: "low" | "medium" | "high";
+  message: string;
+}
+
+interface UserRiskProfile {
+  riskScore: number; // 0-100, 100 = ən riskli
+  riskLevel: "aşağı" | "orta" | "yüksək" | "kritik";
+  flags: UserRiskFlag[];
+  recommendation: string;
+}
+
+const riskFlagConfig: Record<UserRiskFlag["type"], { label: string; color: string }> = {
+  many_rejected: { label: "Çox rədd edilən", color: "text-admin-danger" },
+  spam_pattern: { label: "Spam paterni", color: "text-admin-danger" },
+  fast_posting: { label: "Sürətli paylaşım", color: "text-admin-warning" },
+  fake_info: { label: "Saxta məlumat", color: "text-admin-danger" },
+  complaint_target: { label: "Şikayət hədəfi", color: "text-admin-warning" },
+  duplicate_ads: { label: "Təkrar elanlar", color: "text-admin-warning" },
+  banned_words: { label: "Qadağan sözlər", color: "text-admin-danger" },
+  low_quality_pattern: { label: "Aşağı keyfiyyət", color: "text-muted-foreground" },
+  multiple_accounts: { label: "Çoxlu hesab", color: "text-admin-danger" },
+  price_manipulation: { label: "Qiymət manipulyasiyası", color: "text-admin-warning" },
+};
+
+const riskLevelConfig: Record<string, { label: string; class: string; bgClass: string }> = {
+  "aşağı": { label: "Aşağı risk", class: "text-admin-success", bgClass: "bg-admin-success/10 text-admin-success" },
+  "orta": { label: "Orta risk", class: "text-admin-warning", bgClass: "bg-admin-warning/10 text-admin-warning" },
+  "yüksək": { label: "Yüksək risk", class: "text-admin-danger", bgClass: "bg-admin-danger/10 text-admin-danger" },
+  "kritik": { label: "Kritik risk", class: "text-admin-danger", bgClass: "bg-admin-danger/20 text-admin-danger" },
+};
+
+function analyzeUserRisk(user: UserData): UserRiskProfile {
+  const flags: UserRiskFlag[] = [];
+
+  // 1. Rədd edilən elan nisbəti
+  const rejectedAds = user.userAds.filter(a => a.status === "redd").length;
+  const deletedAds = user.userAds.filter(a => a.status === "silinmis").length;
+  const totalAds = user.userAds.length;
+  const badRatio = totalAds > 0 ? (rejectedAds + deletedAds) / totalAds : 0;
+  if (badRatio > 0.5 && totalAds >= 3) {
+    flags.push({ type: "many_rejected", severity: "high", message: `Elanlarının ${Math.round(badRatio * 100)}%-i rədd/silinmiş (${rejectedAds + deletedAds}/${totalAds})` });
+  } else if (badRatio > 0.3 && totalAds >= 3) {
+    flags.push({ type: "many_rejected", severity: "medium", message: `Elanlarının ${Math.round(badRatio * 100)}%-i rədd/silinmiş` });
+  }
+
+  // 2. Spam pattern — çoxlu gözləmədə olan elan
+  const pendingAds = user.userAds.filter(a => a.status === "gozlemede").length;
+  if (pendingAds >= 5) {
+    flags.push({ type: "spam_pattern", severity: "high", message: `${pendingAds} elan gözləmədədir — spam şübhəsi` });
+  } else if (pendingAds >= 3) {
+    flags.push({ type: "spam_pattern", severity: "medium", message: `${pendingAds} elan gözləmədə — sürətli paylaşım` });
+  }
+
+  // 3. Sürətli paylaşım (eyni gündə çox elan)
+  const adDates = user.userAds.map(a => a.date);
+  const dateCounts: Record<string, number> = {};
+  adDates.forEach(d => { dateCounts[d] = (dateCounts[d] || 0) + 1; });
+  const maxInDay = Math.max(...Object.values(dateCounts), 0);
+  if (maxInDay >= 5) {
+    flags.push({ type: "fast_posting", severity: "high", message: `Bir gündə ${maxInDay} elan paylaşıb — bot/spam davranışı` });
+  } else if (maxInDay >= 3) {
+    flags.push({ type: "fast_posting", severity: "medium", message: `Bir gündə ${maxInDay} elan paylaşıb` });
+  }
+
+  // 4. Saxta əlaqə məlumatları
+  if (user.phone && /(\d)\1{5,}/.test(user.phone.replace(/\D/g, ""))) {
+    flags.push({ type: "fake_info", severity: "high", message: "Telefon nömrəsi saxta görünür (təkrarlanan rəqəmlər)" });
+  }
+  if (user.email && /^[a-z]{1,3}\d{5,}@/.test(user.email.toLowerCase())) {
+    flags.push({ type: "fake_info", severity: "medium", message: "Email adresi avtogenerə olunmuş görünür" });
+  }
+
+  // 5. Şikayət hədəfi
+  const complaints = user.activity.filter(a => a.action.includes("Şikayət"));
+  if (complaints.length >= 3) {
+    flags.push({ type: "complaint_target", severity: "high", message: `${complaints.length} şikayət alıb` });
+  } else if (complaints.length >= 1) {
+    flags.push({ type: "complaint_target", severity: "medium", message: `${complaints.length} şikayət alıb` });
+  }
+
+  // 6. Təkrar elanlar (eyni başlıqlı)
+  const titles = user.userAds.map(a => a.title.toLowerCase());
+  const uniqueTitles = new Set(titles);
+  if (titles.length > uniqueTitles.size && titles.length >= 3) {
+    const dupCount = titles.length - uniqueTitles.size;
+    flags.push({ type: "duplicate_ads", severity: "medium", message: `${dupCount} təkrar elan başlığı var` });
+  }
+
+  // 7. Aşağı keyfiyyət paterni (elanların əksəriyyəti az baxışlı)
+  const lowViewAds = user.userAds.filter(a => a.views < 30).length;
+  if (lowViewAds > totalAds * 0.7 && totalAds >= 3) {
+    flags.push({ type: "low_quality_pattern", severity: "low", message: `Elanlarının ${Math.round((lowViewAds / totalAds) * 100)}%-i 30-dan az baxış alıb` });
+  }
+
+  // 8. Qiymət manipulyasiyası (çox ucuz qiymətlər)
+  const suspiciouslyLow = user.userAds.filter(a => a.price > 0 && a.price < 10).length;
+  if (suspiciouslyLow >= 2) {
+    flags.push({ type: "price_manipulation", severity: "medium", message: `${suspiciouslyLow} elan 10₼-dən aşağı qiymətə qoyulub` });
+  }
+
+  // 9. Hesab yaşı vs elan sayı (yeni hesab, çox elan = şübhəli)
+  const regDate = new Date(user.date);
+  const daysSinceReg = Math.max(1, Math.floor((Date.now() - regDate.getTime()) / 86400000));
+  const adsPerDay = user.ads / daysSinceReg;
+  if (adsPerDay > 2 && user.ads > 10) {
+    flags.push({ type: "fast_posting", severity: "high", message: `Gündə ortalama ${adsPerDay.toFixed(1)} elan — yeni hesab, çox elan` });
+  }
+
+  // 10. Bloklanmış istifadəçi hələ aktiv (əvvəl bloklanıb amma açılıb)
+  const blockHistory = user.activity.filter(a => a.action.includes("blok") || a.detail.includes("blok"));
+  if (blockHistory.length > 0 && user.status === "aktiv") {
+    flags.push({ type: "multiple_accounts", severity: "medium", message: "Əvvəllər bloklanıb — risk qrupu" });
+  }
+
+  // Score
+  const highCount = flags.filter(f => f.severity === "high").length;
+  const medCount = flags.filter(f => f.severity === "medium").length;
+  const lowCount = flags.filter(f => f.severity === "low").length;
+  const riskScore = Math.min(100, highCount * 28 + medCount * 14 + lowCount * 5 + (user.status === "bloklanmis" ? 15 : 0));
+
+  const riskLevel: UserRiskProfile["riskLevel"] = riskScore >= 75 ? "kritik" : riskScore >= 50 ? "yüksək" : riskScore >= 25 ? "orta" : "aşağı";
+
+  const recommendations: Record<string, string> = {
+    "kritik": "Dərhal bloklanmalı və bütün elanları nəzərdən keçirilməlidir",
+    "yüksək": "Elanları manual olaraq yoxlanmalı, xəbərdarlıq göndərilməlidir",
+    "orta": "Monitorinq altında saxlanılmalı, növbəti pozuntu zamanı bloklanmalıdır",
+    "aşağı": "Normal istifadəçi, xüsusi əməliyyat tələb olunmur",
+  };
+
+  return { riskScore, riskLevel, flags, recommendation: recommendations[riskLevel] };
+}
 
 interface UserData {
   id: number;
@@ -27,6 +163,7 @@ interface UserData {
   totalSpent: number;
   verified: boolean;
   bio: string;
+  riskProfile?: UserRiskProfile;
   userAds: { id: number; title: string; status: "aktiv" | "gozlemede" | "redd" | "silinmis" | "vip"; date: string; price: number; views: number }[];
   payments: { id: number; amount: number; service: string; status: "odenlib" | "gozleyir" | "legv" | "qaytarilib"; date: string }[];
   activity: { action: string; detail: string; date: string }[];

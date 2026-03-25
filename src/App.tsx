@@ -20,6 +20,7 @@ import AuditLogPage from "@/pages/admin/AuditLogPage";
 import TenzimlemelarPage from "@/pages/admin/TenzimlemelarPage";
 import SystemStatusPage from "@/pages/admin/SystemStatusPage";
 import ReklamlarPage from "@/pages/admin/ReklamlarPage";
+import SeoPage from "@/pages/admin/SeoPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/audit-log" element={<AuditLogPage />} />
             <Route path="/sistem" element={<SystemStatusPage />} />
             <Route path="/reklamlar" element={<ReklamlarPage />} />
+            <Route path="/seo" element={<SeoPage />} />
             <Route path="/tenzimlemer" element={<TenzimlemelarPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

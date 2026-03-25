@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, FileText, Users, FolderTree, MapPin,
-  CreditCard, AlertTriangle, BarChart3, Bot, Mail,
+  CreditCard, AlertTriangle, BarChart3, Bot, Mail, MessageSquare,
   ClipboardList, Settings, ExternalLink, ChevronLeft, ChevronRight, Store,
   Activity, X, Layout,
 } from "lucide-react";
@@ -19,6 +19,7 @@ const navItems = [
   { label: "Şikayətlər", icon: AlertTriangle, path: "/sikayetler" },
   { label: "Hesabatlar", icon: BarChart3, path: "/hesabatlar" },
   { label: "AI Alətlər", icon: Bot, path: "/ai" },
+  { label: "Mesajlar", icon: MessageSquare, path: "/mesajlar" },
   { label: "Email/SMS/Push", icon: Mail, path: "/email-sms" },
   { label: "Audit Log", icon: ClipboardList, path: "/audit-log" },
   { label: "Sistem Vəziyyəti", icon: Activity, path: "/sistem" },

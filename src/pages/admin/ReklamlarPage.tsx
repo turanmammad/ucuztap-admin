@@ -559,15 +559,194 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
   );
 }
 
+// === REQUEST DETAIL DIALOG ===
+function RequestDetailDialog({ request, slots, open, onClose, onApprove, onReject, onConfirmPayment }: {
+  request: AdRequest | null; slots: BannerSlot[]; open: boolean; onClose: () => void;
+  onApprove: (id: number) => void; onReject: (id: number, reason: string) => void;
+  onConfirmPayment: (id: number, method: string) => void;
+}) {
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Kart");
+
+  if (!request) return null;
+
+  const slot = slots.find(s => s.id === request.slotId);
+  const dur = durationOptions.find(d => d.id === request.duration);
+  const reqStatus = requestStatusConfig[request.status];
+  const payStatus = paymentStatusConfig[request.paymentStatus];
+  const PayIcon = payStatus.icon;
+
+  return (
+    <Dialog open={open} onOpenChange={() => { onClose(); setRejectMode(false); setRejectReason(""); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <FileText size={18} className="text-admin-accent" />
+            Reklam Sorğusu #{request.id}
+            <span className={cn("text-[10px] px-2 py-0.5 rounded font-medium", reqStatus.class)}>{reqStatus.label}</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {/* Advertiser info */}
+          <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1"><User size={12} /> Reklamçı</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div><span className="text-muted-foreground text-xs">Ad:</span><p className="font-medium">{request.advertiser}</p></div>
+              <div><span className="text-muted-foreground text-xs">Şirkət:</span><p className="font-medium">{request.company}</p></div>
+              <div><span className="text-muted-foreground text-xs">Email:</span><p className="text-xs">{request.email}</p></div>
+              <div><span className="text-muted-foreground text-xs">Telefon:</span><p className="text-xs font-mono">{request.phone}</p></div>
+            </div>
+          </div>
+
+          {/* Banner details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Banner Yeri</h4>
+                <p className="text-sm font-medium mt-0.5">{slot?.name || request.slotId}</p>
+                <p className="text-[10px] text-muted-foreground">{slot?.location} • {slot?.size}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Hədəf URL</h4>
+                <a href={request.targetUrl} target="_blank" rel="noreferrer" className="text-xs text-admin-accent hover:underline flex items-center gap-1">
+                  {request.targetUrl} <ExternalLink size={10} />
+                </a>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Təsvir</h4>
+                <p className="text-sm mt-0.5 bg-muted/20 rounded p-2">{request.description}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Banner şəkli</h4>
+                <span className={cn("text-xs", request.imageUploaded ? "text-admin-success" : "text-admin-warning")}>
+                  {request.imageUploaded ? "✓ Yüklənib" : "✗ Yüklənməyib"}
+                </span>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Sorğu tarixi</h4>
+                <p className="text-xs text-muted-foreground">{request.createdAt}</p>
+              </div>
+            </div>
+
+            {/* Duration & Payment */}
+            <div className="space-y-3">
+              <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg p-3 space-y-2">
+                <h4 className="text-xs font-semibold flex items-center gap-1"><CalendarDays size={12} className="text-admin-accent" /> Müddət & Qiymət</h4>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{dur?.label || request.duration}</span>
+                  <span className="text-sm text-muted-foreground">({request.durationDays} gün)</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-border">
+                  <span className="text-xs text-muted-foreground">Günlük tarif:</span>
+                  <span className="text-xs font-medium">{slot?.priceDaily || "—"} ₼</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Ümumi:</span>
+                  <span className="text-lg font-bold text-admin-accent">{request.totalPrice} ₼</span>
+                </div>
+              </div>
+
+              <div className={cn("rounded-lg border p-3 space-y-2", payStatus.class.replace("/10", "/5").replace("text-", "border-").split(" ")[0] + "/20")}>
+                <h4 className="text-xs font-semibold flex items-center gap-1"><CreditCard size={12} /> Ödəniş</h4>
+                <div className="flex items-center gap-2">
+                  <PayIcon size={14} />
+                  <span className={cn("text-sm font-medium px-2 py-0.5 rounded", payStatus.class)}>{payStatus.label}</span>
+                </div>
+                {request.paymentMethod && (
+                  <p className="text-xs text-muted-foreground">Metod: {request.paymentMethod}</p>
+                )}
+                {request.paymentDate && (
+                  <p className="text-xs text-muted-foreground">Tarix: {request.paymentDate}</p>
+                )}
+              </div>
+
+              {request.note && (
+                <div className="bg-admin-danger/5 border border-admin-danger/20 rounded-lg p-3">
+                  <h4 className="text-xs font-semibold text-admin-danger flex items-center gap-1"><AlertTriangle size={12} /> Qeyd</h4>
+                  <p className="text-xs mt-1">{request.note}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Reject mode */}
+          {rejectMode && (
+            <div className="space-y-2 animate-fade-in border-t border-border pt-3">
+              <label className="text-sm font-medium text-admin-danger">Rədd səbəbi:</label>
+              <Textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Rədd səbəbini yazın..." rows={2} />
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-admin-danger text-primary-foreground hover:bg-admin-danger/90" onClick={() => {
+                  if (!rejectReason.trim()) { toast({ title: "Səbəb yazın", variant: "destructive" }); return; }
+                  onReject(request.id, rejectReason);
+                  setRejectMode(false); setRejectReason("");
+                }}><X size={14} className="mr-1" /> Rədd et</Button>
+                <Button size="sm" variant="outline" onClick={() => { setRejectMode(false); setRejectReason(""); }}>Ləğv</Button>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          {!rejectMode && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+              {request.status === "yeni" && (
+                <>
+                  <Button onClick={() => onApprove(request.id)} className="flex-1 bg-admin-success text-primary-foreground hover:bg-admin-success/90">
+                    <Check size={14} className="mr-1" /> Təsdiqlə
+                  </Button>
+                  <Button onClick={() => setRejectMode(true)} variant="outline" className="flex-1 text-admin-danger border-admin-danger/30">
+                    <X size={14} className="mr-1" /> Rədd et
+                  </Button>
+                </>
+              )}
+              {(request.status === "təsdiqləndi" && request.paymentStatus === "gözləyir") && (
+                <div className="w-full space-y-2">
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="text-xs font-medium">Ödəniş metodu</label>
+                      <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <SelectTrigger className="mt-1 h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Kart">Kart</SelectItem>
+                          <SelectItem value="Bank köçürməsi">Bank köçürməsi</SelectItem>
+                          <SelectItem value="Nağd">Nağd</SelectItem>
+                          <SelectItem value="Balans">Balans</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={() => onConfirmPayment(request.id, paymentMethod)} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90 h-8">
+                      <CreditCard size={14} className="mr-1" /> Ödənişi təsdiqlə
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {request.status === "ödənilib" && (
+                <Button className="flex-1 bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => {
+                  toast({ title: "🚀 Reklam aktivləşdirildi", description: `#${request.id} — ${request.durationDays} gün müddətinə` });
+                  onClose();
+                }}>
+                  <Send size={14} className="mr-1" /> Reklamı aktivləşdir
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // === MAIN PAGE ===
 export default function ReklamlarPage() {
   const [slots, setSlots] = useState(bannerSlots);
   const [banners, setBanners] = useState(mockBanners);
-  const [activeTab, setActiveTab] = useState<"banners" | "slots" | "pricing">("banners");
+  const [requests, setRequests] = useState(mockRequests);
+  const [activeTab, setActiveTab] = useState<"banners" | "slots" | "pricing" | "requests">("banners");
   const [editSlot, setEditSlot] = useState<BannerSlot | null>(null);
   const [bannerForm, setBannerForm] = useState(false);
   const [editBanner, setEditBanner] = useState<Banner | null>(null);
   const [aiDialog, setAiDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<AdRequest | null>(null);
 
   const totalRevenue = banners.reduce((s, b) => s + b.revenue, 0);
   const totalImpressions = banners.reduce((s, b) => s + b.impressions, 0);

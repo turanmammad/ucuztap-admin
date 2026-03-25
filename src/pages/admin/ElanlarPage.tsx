@@ -1,14 +1,101 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X, Trash2, Edit, Bot, Filter, Calendar, ChevronLeft, ChevronRight, Crown, Zap, ArrowUp, Star, Save, ImagePlus, XCircle } from "lucide-react";
+import { Search, Eye, Check, X, Trash2, Edit, Bot, Filter, Calendar, ChevronLeft, ChevronRight, Crown, Zap, ArrowUp, Star, Save, ImagePlus, XCircle, ShieldCheck, AlertTriangle, Phone, Copy, Ban, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+
+// ── AI Moderation Types ──
+interface AiCheckResult {
+  passed: boolean;
+  score: number; // 0-100 (100 = tam təmiz)
+  flags: AiFlag[];
+}
+
+interface AiFlag {
+  type: "spam" | "duplicate" | "phone_in_desc" | "suspicious_price" | "banned_words" | "fake_contact" | "repeat_post" | "low_quality";
+  severity: "low" | "medium" | "high";
+  message: string;
+}
+
+const flagConfig: Record<AiFlag["type"], { label: string; icon: typeof Bot; color: string }> = {
+  spam: { label: "Spam", icon: Ban, color: "text-admin-danger" },
+  duplicate: { label: "Təkrar elan", icon: Copy, color: "text-admin-warning" },
+  phone_in_desc: { label: "Nömrə təsvirdə", icon: Phone, color: "text-admin-warning" },
+  suspicious_price: { label: "Şübhəli qiymət", icon: AlertTriangle, color: "text-admin-danger" },
+  banned_words: { label: "Qadağan söz", icon: Ban, color: "text-admin-danger" },
+  fake_contact: { label: "Saxta əlaqə", icon: AlertTriangle, color: "text-admin-warning" },
+  repeat_post: { label: "Eyni istifadəçi təkrarı", icon: Copy, color: "text-admin-info" },
+  low_quality: { label: "Aşağı keyfiyyət", icon: AlertTriangle, color: "text-muted-foreground" },
+};
+
+// ── AI Filter Engine (simulated) ──
+function runAiCheck(ad: Ad, allAds: Ad[]): AiCheckResult {
+  const flags: AiFlag[] = [];
+
+  // 1. Telefon nömrəsi təsvirdə
+  const phoneRegex = /(\+994|0\d{2})[\s\-.]?\d{2,3}[\s\-.]?\d{2}[\s\-.]?\d{2}/g;
+  const phoneInDesc = phoneRegex.test(ad.description);
+  if (phoneInDesc) {
+    flags.push({ type: "phone_in_desc", severity: "medium", message: "Təsvirdə telefon nömrəsi aşkarlandı — əlaqə sahəsindən istifadə edilməlidir" });
+  }
+
+  // 2. Spam sözlər
+  const spamWords = ["pulsuz", "100% zəmanət", "zəng edin", "whatsapp", "tələsin", "son şans", "maraqlananlar", "real alıcı"];
+  const descLower = ad.description.toLowerCase() + " " + ad.title.toLowerCase();
+  const foundSpam = spamWords.filter(w => descLower.includes(w));
+  if (foundSpam.length >= 2) {
+    flags.push({ type: "spam", severity: "high", message: `Spam ifadələr: "${foundSpam.join('", "')}"` });
+  }
+
+  // 3. Təkrar elan (eyni başlıq digər elanla)
+  const duplicates = allAds.filter(a => a.id !== ad.id && a.title.toLowerCase() === ad.title.toLowerCase() && a.status !== "silinmis");
+  if (duplicates.length > 0) {
+    flags.push({ type: "duplicate", severity: "high", message: `#${duplicates[0].id} ilə eyni başlıq` });
+  }
+
+  // 4. Eyni istifadəçinin çox elanı (son 24 saatda)
+  const sameUserAds = allAds.filter(a => a.id !== ad.id && a.user === ad.user && a.status === "gozlemede");
+  if (sameUserAds.length >= 3) {
+    flags.push({ type: "repeat_post", severity: "medium", message: `Bu istifadəçinin ${sameUserAds.length} gözləmədə olan elanı var` });
+  }
+
+  // 5. Şübhəli qiymət (çox aşağı)
+  const avgPrices: Record<string, number> = { "Nəqliyyat": 15000, "Daşınmaz əmlak": 50000, "Elektronika": 1000, "Ev və bağ": 500 };
+  const avg = avgPrices[ad.category] || 1000;
+  if (ad.price > 0 && ad.price < avg * 0.15) {
+    flags.push({ type: "suspicious_price", severity: "high", message: `Qiymət (${ad.price}₼) kateqoriya ortalamasından çox aşağıdır (${avg}₼)` });
+  }
+
+  // 6. Qadağan sözlər
+  const bannedWords = ["siqaret", "narkotik", "silah", "saxta", "fake", "oğurlanmış"];
+  const foundBanned = bannedWords.filter(w => descLower.includes(w));
+  if (foundBanned.length > 0) {
+    flags.push({ type: "banned_words", severity: "high", message: `Qadağan sözlər: "${foundBanned.join('", "')}"` });
+  }
+
+  // 7. Aşağı keyfiyyət (çox qısa təsvir)
+  if (ad.description.length < 20) {
+    flags.push({ type: "low_quality", severity: "low", message: "Təsvir çox qısadır (min. 20 simvol tövsiyə olunur)" });
+  }
+
+  // 8. Saxta əlaqə
+  if (ad.userPhone && /(\d)\1{6,}/.test(ad.userPhone.replace(/\D/g, ""))) {
+    flags.push({ type: "fake_contact", severity: "high", message: "Telefon nömrəsi saxta görünür" });
+  }
+
+  const highCount = flags.filter(f => f.severity === "high").length;
+  const medCount = flags.filter(f => f.severity === "medium").length;
+  const score = Math.max(0, 100 - highCount * 30 - medCount * 15 - flags.filter(f => f.severity === "low").length * 5);
+
+  return { passed: highCount === 0, score, flags };
+}
 
 interface Ad {
   id: number;
@@ -26,6 +113,7 @@ interface Ad {
   date: string;
   aiFlag: boolean;
   aiReason?: string;
+  aiCheck?: AiCheckResult;
   description: string;
   location: string;
   images: string[];
@@ -63,9 +151,9 @@ const mockAds: Ad[] = Array.from({ length: 25 }, (_, i) => ({
   aiFlag: i % 5 === 0,
   aiReason: i % 5 === 0 ? ["Şübhəli qiymət — bazar dəyərindən 70% aşağı", "Dublikat elan — #10032 ilə eyni", "Spam sözlər aşkarlandı", "Uyğunsuz şəkil aşkarlandı", "Saxta əlaqə nömrəsi"][i % 5] : undefined,
   description: [
-    "Mercedes-Benz C220d, 2019-cu il buraxılış, 45.000 km yürüş, dizel mühərrik, avtomatik sürətlər qutusu. Tam texniki baxışdan keçib.",
+    "Mercedes-Benz C220d, 2019-cu il buraxılış, 45.000 km yürüş, dizel mühərrik, avtomatik sürətlər qutusu. Tam texniki baxışdan keçib. Zəng edin +994 50 300 20 40",
     "Nəsimi rayonu, 28 May metrosuna yaxın. 16/9 mərtəbə, sahə 90 m², 3 otaq, təmirli. Qaz, su, işıq daimi.",
-    "iPhone 15 Pro Max, 256GB, Natural Titanium rəngi. Yeni, qutuda. Apple Azərbaycan zəmanəti 1 il.",
+    "iPhone 15 Pro Max, 256GB, Natural Titanium rəngi. Yeni, qutuda. Tələsin son şans! Maraqlananlar whatsapp yazın.",
     "Samsung 55 düym QLED 4K Smart TV. 2024-cü il modeli. Zəmanət 2 il.",
     "BMW X5 xDrive30d M Sport paket, 2021, 32.000 km. Panorama, Harman Kardon, head-up display.",
   ][i % 5],
@@ -75,7 +163,7 @@ const mockAds: Ad[] = Array.from({ length: 25 }, (_, i) => ({
   featured: i % 6 === 0,
   promotion: ([null, "vip", null, "premium", null, "ireli", null, null, null, null] as const)[i % 10],
   promotionExpiry: i % 4 === 1 ? "2026-04-" + String(5 + i).padStart(2, "0") : undefined,
-}));
+}))
 
 const promotionConfig = {
   vip: { label: "VIP", icon: Crown, color: "bg-admin-accent/15 text-admin-accent", price: "5 ₼/gün" },

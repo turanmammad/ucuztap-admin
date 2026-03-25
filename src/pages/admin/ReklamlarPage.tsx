@@ -823,6 +823,27 @@ export default function ReklamlarPage() {
     toast({ title: "🗑️ Banner silindi" });
   };
 
+  const handleApproveRequest = (id: number) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "təsdiqləndi" as const } : r));
+    setSelectedRequest(null);
+    toast({ title: "✅ Sorğu təsdiqləndi", description: `#${id} — ödəniş gözlənilir` });
+  };
+
+  const handleRejectRequest = (id: number, reason: string) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "rədd" as const, paymentStatus: "ləğv" as const, note: reason } : r));
+    setSelectedRequest(null);
+    toast({ title: "❌ Sorğu rədd edildi", description: `#${id}: ${reason}` });
+  };
+
+  const handleConfirmPayment = (id: number, method: string) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "ödənilib" as const, paymentStatus: "ödənilib" as const, paymentMethod: method, paymentDate: new Date().toISOString().split("T")[0] } : r));
+    setSelectedRequest(null);
+    toast({ title: "💰 Ödəniş təsdiqləndi", description: `#${id} — ${method}` });
+  };
+
+  const newRequestCount = requests.filter(r => r.status === "yeni").length;
+  const pendingPaymentCount = requests.filter(r => r.status === "təsdiqləndi" && r.paymentStatus === "gözləyir").length;
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header */}

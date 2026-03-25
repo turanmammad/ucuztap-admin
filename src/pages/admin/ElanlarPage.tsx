@@ -490,7 +490,7 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject, onEdit, onProm
                 <p className="text-xs text-muted-foreground mt-0.5">{ad.aiReason}</p>
               </div>
             </div>
-          )
+          )}
 
           {/* Promotion badge */}
           {ad.promotion && (

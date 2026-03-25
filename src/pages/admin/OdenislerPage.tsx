@@ -73,17 +73,29 @@ export default function OdenislerPage() {
     toast({ title: "✅ Ödəniş təsdiqləndi", description: `Ödəniş #${id} təsdiqləndi` });
   };
 
-  const handleExport = () => {
-    const csv = "ID,İstifadəçi,Email,Məbləğ,Xidmət,Metod,Status,Tarix,Transaction ID\n" +
-      payments.map((p) => `${p.id},${p.user},${p.userEmail},${p.amount} ₼,${p.service},${p.method},${p.status},${p.date},${p.transactionId}`).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "odenisler.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: "📥 CSV yükləndi" });
+  const handleExcelExport = () => {
+    exportToExcel(filtered, [
+      { key: "id", label: "ID" },
+      { key: "user", label: "İstifadəçi" },
+      { key: "userEmail", label: "Email" },
+      { key: "amount", label: "Məbləğ" },
+      { key: "service", label: "Xidmət" },
+      { key: "method", label: "Metod" },
+      { key: "status", label: "Status" },
+      { key: "date", label: "Tarix" },
+      { key: "transactionId", label: "Transaction ID" },
+    ], "odenisler");
+  };
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDir(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
   };
 
   const filtered = payments.filter(p => {

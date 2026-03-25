@@ -600,6 +600,58 @@ export default function ElanlarPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [promotionFilter, setPromotionFilter] = useState("all");
   const [searchParams] = useSearchParams();
+  const [aiScanning, setAiScanning] = useState(false);
+  const [aiScanProgress, setAiScanProgress] = useState(0);
+  const [aiScanDone, setAiScanDone] = useState(false);
+
+  const handleAiScan = useCallback(() => {
+    const pendingAds = ads.filter(a => a.status === "gozlemede");
+    if (pendingAds.length === 0) {
+      toast({ title: "ℹ️ Gözləmədə elan yoxdur" });
+      return;
+    }
+    setAiScanning(true);
+    setAiScanProgress(0);
+
+    let processed = 0;
+    const total = pendingAds.length;
+
+    const interval = setInterval(() => {
+      processed++;
+      setAiScanProgress(Math.round((processed / total) * 100));
+
+      if (processed >= total) {
+        clearInterval(interval);
+        setAds(prev => prev.map(ad => {
+          if (ad.status !== "gozlemede") return ad;
+          const check = runAiCheck(ad, prev);
+          return { ...ad, aiCheck: check, aiFlag: !check.passed, aiReason: check.flags.length > 0 ? check.flags[0].message : undefined };
+        }));
+        setAiScanning(false);
+        setAiScanDone(true);
+
+        const results = pendingAds.map(ad => runAiCheck(ad, ads));
+        const passedCount = results.filter(r => r.passed).length;
+        const failedCount = results.filter(r => !r.passed).length;
+
+        toast({
+          title: "🤖 AI Filtrasiya tamamlandı",
+          description: `${total} elan yoxlanıldı: ${passedCount} keçdi, ${failedCount} problemli`,
+        });
+      }
+    }, 300);
+  }, [ads]);
+
+  // Auto-approve clean ads
+  const handleAutoApprove = useCallback(() => {
+    const cleanAds = ads.filter(a => a.status === "gozlemede" && a.aiCheck?.passed);
+    if (cleanAds.length === 0) {
+      toast({ title: "ℹ️ Avtomatik təsdiq üçün təmiz elan yoxdur" });
+      return;
+    }
+    setAds(prev => prev.map(a => cleanAds.some(c => c.id === a.id) ? { ...a, status: "aktiv" as const } : a));
+    toast({ title: "✅ Avtomatik təsdiq", description: `${cleanAds.length} təmiz elan avtomatik təsdiqləndi` });
+  }, [ads]);
 
   useEffect(() => {
     const status = searchParams.get("status");

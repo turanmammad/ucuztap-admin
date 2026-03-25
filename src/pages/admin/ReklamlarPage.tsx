@@ -207,23 +207,188 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
   const [style, setStyle] = useState("modern");
   const [generating, setGenerating] = useState(false);
   const [colorScheme, setColorScheme] = useState("auto");
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const selectedSlot = slots.find(s => s.id === slotId);
 
+  const generateBannerCanvas = (w: number, h: number): string => {
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+
+    // Color schemes
+    const schemes: Record<string, { bg1: string; bg2: string; accent: string; text: string; subtext: string }> = {
+      auto: { bg1: "#0f172a", bg2: "#1e3a5f", accent: "#f59e0b", text: "#ffffff", subtext: "#94a3b8" },
+      brand: { bg1: "#1a1a2e", bg2: "#16213e", accent: "#e94560", text: "#ffffff", subtext: "#a0aec0" },
+      warm: { bg1: "#7c2d12", bg2: "#c2410c", accent: "#fbbf24", text: "#ffffff", subtext: "#fed7aa" },
+      cool: { bg1: "#0c4a6e", bg2: "#0369a1", accent: "#22d3ee", text: "#ffffff", subtext: "#bae6fd" },
+      dark: { bg1: "#09090b", bg2: "#18181b", accent: "#a78bfa", text: "#ffffff", subtext: "#71717a" },
+      light: { bg1: "#f8fafc", bg2: "#e2e8f0", accent: "#2563eb", text: "#0f172a", subtext: "#64748b" },
+    };
+    const colors = schemes[colorScheme] || schemes.auto;
+
+    // Style-based rendering
+    const grad = ctx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, colors.bg1);
+    grad.addColorStop(1, colors.bg2);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Decorative shapes based on style
+    if (style === "modern" || style === "bold") {
+      ctx.fillStyle = colors.accent + "20";
+      ctx.beginPath();
+      ctx.arc(w * 0.85, h * 0.3, Math.min(w, h) * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(w * 0.1, h * 0.8, Math.min(w, h) * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (style === "bold") {
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(0, h - 4, w, 4);
+      ctx.fillRect(0, 0, 4, h);
+    }
+    if (style === "elegant") {
+      ctx.strokeStyle = colors.accent + "40";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(w * 0.6 + i * 15, 0);
+        ctx.lineTo(w + i * 15, h);
+        ctx.stroke();
+      }
+    }
+    if (style === "minimal") {
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(w * 0.04, h * 0.15, 3, h * 0.7);
+    }
+
+    // Extract text from prompt
+    const lines = prompt.split(/[.!,\n]/).map(s => s.trim()).filter(Boolean);
+    const mainText = lines[0] || "Banner";
+    const subText = lines[1] || "";
+
+    // Quoted text extraction
+    const quoted = prompt.match(/'([^']+)'/)?.[1] || prompt.match(/"([^"]+)"/)?.[1];
+
+    const isWide = w / h > 3;
+    const padding = Math.max(w * 0.05, 16);
+
+    if (isWide) {
+      // Wide banner (leaderboard)
+      const fontSize = Math.min(h * 0.4, 32);
+      ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+      ctx.fillStyle = colors.text;
+      ctx.textBaseline = "middle";
+      ctx.fillText(mainText.slice(0, 40), padding, h * 0.42, w * 0.55);
+
+      if (quoted || subText) {
+        ctx.font = `bold ${fontSize * 1.1}px system-ui, sans-serif`;
+        ctx.fillStyle = colors.accent;
+        const ctaText = quoted || subText;
+        const textWidth = ctx.measureText(ctaText).width;
+        const btnX = w - padding - textWidth - 30;
+        // CTA button
+        ctx.beginPath();
+        const btnH = fontSize * 1.6;
+        const btnY = (h - btnH) / 2;
+        const btnW = textWidth + 30;
+        const r = btnH / 2;
+        ctx.moveTo(btnX + r, btnY);
+        ctx.lineTo(btnX + btnW - r, btnY);
+        ctx.arc(btnX + btnW - r, btnY + r, r, -Math.PI / 2, Math.PI / 2);
+        ctx.lineTo(btnX + r, btnY + btnH);
+        ctx.arc(btnX + r, btnY + r, r, Math.PI / 2, -Math.PI / 2);
+        ctx.fillStyle = colors.accent;
+        ctx.fill();
+        ctx.fillStyle = colors.bg1;
+        ctx.font = `bold ${fontSize * 0.85}px system-ui, sans-serif`;
+        ctx.fillText(ctaText, btnX + 15, h * 0.52, btnW - 30);
+      }
+    } else {
+      // Square/tall banners
+      const titleSize = Math.min(w * 0.08, h * 0.08, 36);
+      ctx.font = `bold ${titleSize}px system-ui, sans-serif`;
+      ctx.fillStyle = colors.text;
+      ctx.textBaseline = "top";
+
+      // Word wrap
+      const maxW = w - padding * 2;
+      const words = mainText.split(" ");
+      let line = "";
+      let y = h * 0.2;
+      for (const word of words) {
+        const test = line + (line ? " " : "") + word;
+        if (ctx.measureText(test).width > maxW && line) {
+          ctx.fillText(line, padding, y, maxW);
+          y += titleSize * 1.3;
+          line = word;
+        } else {
+          line = test;
+        }
+      }
+      if (line) ctx.fillText(line, padding, y, maxW);
+
+      // Sub text or quoted CTA
+      if (quoted) {
+        const ctaSize = Math.min(titleSize * 0.9, 28);
+        const ctaY = h * 0.7;
+        ctx.font = `bold ${ctaSize}px system-ui, sans-serif`;
+        const tw = ctx.measureText(quoted).width;
+        const btnW = tw + 30;
+        const btnH = ctaSize * 2;
+        const btnX = padding;
+        ctx.fillStyle = colors.accent;
+        const r = 6;
+        ctx.beginPath();
+        ctx.roundRect(btnX, ctaY, btnW, btnH, r);
+        ctx.fill();
+        ctx.fillStyle = colors.bg1;
+        ctx.fillText(quoted, btnX + 15, ctaY + ctaSize * 0.45, btnW - 30);
+      } else if (subText) {
+        ctx.font = `${titleSize * 0.6}px system-ui, sans-serif`;
+        ctx.fillStyle = colors.subtext;
+        ctx.fillText(subText, padding, h * 0.65, maxW);
+      }
+    }
+
+    // Watermark
+    ctx.font = `${Math.max(8, Math.min(w, h) * 0.04)}px system-ui`;
+    ctx.fillStyle = colors.subtext + "60";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillText("ucuztap.az", w - 8, h - 6);
+
+    return canvas.toDataURL("image/png");
+  };
+
   const handleGenerate = () => {
     if (!prompt.trim()) { toast({ title: "Xəta", description: "Təsvir yazın", variant: "destructive" }); return; }
+    if (!selectedSlot) return;
     setGenerating(true);
+    setPreviewUrl(null);
+
     setTimeout(() => {
+      const url = generateBannerCanvas(selectedSlot.width, selectedSlot.height);
+      setPreviewUrl(url);
       setGenerating(false);
-      onGenerate({ prompt, slotId, style, colorScheme, size: selectedSlot?.size });
-      toast({ title: "✨ AI Banner hazırlandı", description: `${selectedSlot?.size} ölçüsündə banner generasiya edildi` });
-      onClose();
-    }, 3000);
+    }, 1500);
+  };
+
+  const handleApply = () => {
+    if (!previewUrl) return;
+    onGenerate({ prompt, slotId, style, colorScheme, size: selectedSlot?.size, imageUrl: previewUrl });
+    toast({ title: "✨ AI Banner tətbiq edildi", description: `${selectedSlot?.size} ölçüsündə banner yaradıldı` });
+    onClose();
+    setPreviewUrl(null);
+    setPrompt("");
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+    <Dialog open={open} onOpenChange={() => { onClose(); setPreviewUrl(null); }}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles size={18} className="text-admin-accent" />
@@ -233,7 +398,7 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium">Banner Yeri</label>
-            <Select value={slotId} onValueChange={setSlotId}>
+            <Select value={slotId} onValueChange={v => { setSlotId(v); setPreviewUrl(null); }}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {slots.filter(s => s.active).map(s => (
@@ -250,7 +415,7 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
 
           <div>
             <label className="text-sm font-medium">Təsvir</label>
-            <Textarea value={prompt} onChange={e => setPrompt(e.target.value)} className="mt-1" rows={3}
+            <Textarea value={prompt} onChange={e => { setPrompt(e.target.value); setPreviewUrl(null); }} className="mt-1" rows={3}
               placeholder="Nümunə: Kapital Bank kredit kampaniyası üçün mavi tonlarda professional banner. '0% faiz, 12 ay' yazılsın." />
           </div>
 
@@ -263,7 +428,7 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
                 { id: "bold", label: "Cəsarətli" },
                 { id: "elegant", label: "Zərif" },
               ].map(s => (
-                <button key={s.id} onClick={() => setStyle(s.id)}
+                <button key={s.id} onClick={() => { setStyle(s.id); setPreviewUrl(null); }}
                   className={cn(
                     "px-3 py-2 rounded-md border text-xs font-medium transition-all",
                     style === s.id ? "border-admin-accent bg-admin-accent/10 text-admin-accent" : "border-border text-muted-foreground hover:border-admin-accent/40"
@@ -276,7 +441,7 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
 
           <div>
             <label className="text-sm font-medium">Rəng sxemi</label>
-            <Select value={colorScheme} onValueChange={setColorScheme}>
+            <Select value={colorScheme} onValueChange={v => { setColorScheme(v); setPreviewUrl(null); }}>
               <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="auto">Avtomatik (təsvirə uyğun)</SelectItem>
@@ -289,35 +454,49 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
             </Select>
           </div>
 
-          {/* Preview placeholder */}
+          {/* Preview */}
           <div className="border border-border rounded-lg overflow-hidden">
             <div className="bg-muted/20 p-2 text-[10px] text-muted-foreground flex items-center justify-between">
               <span>Önizləmə — {selectedSlot?.size || "728×90"}</span>
               <span className="text-admin-accent">AI ✨</span>
             </div>
-            <div className="bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center" style={{ height: Math.min(selectedSlot?.height || 90, 200), aspectRatio: selectedSlot ? `${selectedSlot.width}/${selectedSlot.height}` : undefined }}>
+            <div className="bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center overflow-hidden"
+              style={{ minHeight: 80, maxHeight: 250 }}>
               {generating ? (
-                <div className="flex flex-col items-center gap-2 animate-pulse">
+                <div className="flex flex-col items-center gap-2 animate-pulse py-6">
                   <Wand2 size={24} className="text-admin-accent animate-spin" />
                   <span className="text-xs text-muted-foreground">AI hazırlayır...</span>
                 </div>
+              ) : previewUrl ? (
+                <img src={previewUrl} alt="AI Banner Preview" className="w-full h-auto object-contain" />
               ) : (
-                <span className="text-xs text-muted-foreground">Banner burada görünəcək</span>
+                <span className="text-xs text-muted-foreground py-6">Təsvir yazıb "AI ilə Hazırla" basın</span>
               )}
             </div>
           </div>
 
-          <Button
-            className="w-full bg-gradient-to-r from-admin-accent to-amber-400 text-accent-foreground hover:opacity-90"
-            onClick={handleGenerate}
-            disabled={generating}
-          >
-            {generating ? (
-              <><Wand2 size={14} className="mr-2 animate-spin" /> Hazırlanır...</>
-            ) : (
-              <><Sparkles size={14} className="mr-2" /> AI ilə Hazırla</>
-            )}
-          </Button>
+          {previewUrl ? (
+            <div className="flex gap-2">
+              <Button className="flex-1 bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={handleApply}>
+                <Sparkles size={14} className="mr-2" /> Tətbiq et
+              </Button>
+              <Button variant="outline" onClick={handleGenerate}>
+                <Wand2 size={14} className="mr-1" /> Yenidən
+              </Button>
+            </div>
+          ) : (
+            <Button
+              className="w-full bg-gradient-to-r from-admin-accent to-amber-400 text-accent-foreground hover:opacity-90"
+              onClick={handleGenerate}
+              disabled={generating}
+            >
+              {generating ? (
+                <><Wand2 size={14} className="mr-2 animate-spin" /> Hazırlanır...</>
+              ) : (
+                <><Sparkles size={14} className="mr-2" /> AI ilə Hazırla</>
+              )}
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

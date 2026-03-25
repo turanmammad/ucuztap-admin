@@ -19,7 +19,7 @@ interface AiCheckResult {
 }
 
 interface AiFlag {
-  type: "spam" | "duplicate" | "phone_in_desc" | "suspicious_price" | "banned_words" | "fake_contact" | "repeat_post" | "low_quality";
+  type: "spam" | "duplicate" | "phone_in_desc" | "suspicious_price" | "banned_words" | "fake_contact" | "repeat_post" | "low_quality" | "few_images" | "duplicate_images" | "bad_language" | "mixed_language" | "caps_abuse";
   severity: "low" | "medium" | "high";
   message: string;
 }
@@ -33,6 +33,11 @@ const flagConfig: Record<AiFlag["type"], { label: string; icon: typeof Bot; colo
   fake_contact: { label: "Saxta əlaqə", icon: AlertTriangle, color: "text-admin-warning" },
   repeat_post: { label: "Eyni istifadəçi təkrarı", icon: Copy, color: "text-admin-info" },
   low_quality: { label: "Aşağı keyfiyyət", icon: AlertTriangle, color: "text-muted-foreground" },
+  few_images: { label: "Az şəkil", icon: ImagePlus, color: "text-admin-warning" },
+  duplicate_images: { label: "Təkrar şəkil", icon: Copy, color: "text-admin-danger" },
+  bad_language: { label: "Nalayiq söz", icon: Ban, color: "text-admin-danger" },
+  mixed_language: { label: "Qarışıq dil", icon: AlertTriangle, color: "text-admin-warning" },
+  caps_abuse: { label: "BÖYÜK HƏRF", icon: AlertTriangle, color: "text-admin-warning" },
 };
 
 // ── AI Filter Engine (simulated) ──
@@ -90,9 +95,64 @@ function runAiCheck(ad: Ad, allAds: Ad[]): AiCheckResult {
     flags.push({ type: "fake_contact", severity: "high", message: "Telefon nömrəsi saxta görünür" });
   }
 
+  // 9. Şəkil sayı yoxlanması
+  if (!ad.images || ad.images.length === 0) {
+    flags.push({ type: "few_images", severity: "medium", message: "Elanda heç bir şəkil yoxdur" });
+  } else if (ad.images.length === 1) {
+    flags.push({ type: "few_images", severity: "low", message: "Yalnız 1 şəkil var — minimum 3 şəkil tövsiyə olunur" });
+  } else if (ad.images.length < 3) {
+    flags.push({ type: "few_images", severity: "low", message: `Yalnız ${ad.images.length} şəkil var — minimum 3 tövsiyə olunur` });
+  }
+
+  // 10. Dublikat şəkil aşkarlanması (eyni fayl adı/URL)
+  if (ad.images && ad.images.length > 1) {
+    const seen = new Set<string>();
+    const duplicateImgs: string[] = [];
+    for (const img of ad.images) {
+      const normalized = img.toLowerCase().trim();
+      if (seen.has(normalized)) {
+        duplicateImgs.push(img);
+      }
+      seen.add(normalized);
+    }
+    if (duplicateImgs.length > 0) {
+      flags.push({ type: "duplicate_images", severity: "high", message: `${duplicateImgs.length} dublikat şəkil aşkarlandı — eyni şəkil bir neçə dəfə yüklənib` });
+    }
+    // Oxşar ad patternləri (img1.jpg, img2.jpg — stock/fake patern)
+    const baseNames = ad.images.map(img => img.replace(/\d+/g, "").toLowerCase());
+    const uniquePatterns = new Set(baseNames);
+    if (uniquePatterns.size === 1 && ad.images.length >= 3) {
+      flags.push({ type: "duplicate_images", severity: "medium", message: "Bütün şəkillər eyni paternə malikdir — stock/saxta şəkil ola bilər" });
+    }
+  }
+
+  // 11. Dil analizi — nalayiq sözlər
+  const profanityWords = ["axmaq", "sənin atan", "dəli", "gic", "siktir", "əclaf", "oğraş", "peysər", "donuz", "heyvan"];
+  const foundProfanity = profanityWords.filter(w => descLower.includes(w));
+  if (foundProfanity.length > 0) {
+    flags.push({ type: "bad_language", severity: "high", message: `Nalayiq ifadələr aşkarlandı: "${foundProfanity.join('", "')}"` });
+  }
+
+  // 12. Qarışıq dil analizi (Azərbaycan mətni içində əcnəbi cümlələr)
+  const cyrillicRatio = (descLower.match(/[а-яё]/g) || []).length / Math.max(descLower.length, 1);
+  const latinRatio = (descLower.match(/[a-z]/g) || []).length / Math.max(descLower.length, 1);
+  const azChars = (descLower.match(/[əöüçşğıİ]/gi) || []).length;
+  if (cyrillicRatio > 0.3 && azChars < 2) {
+    flags.push({ type: "mixed_language", severity: "medium", message: "Elan kiril əlifbası ilə yazılıb — Azərbaycan dilində deyil" });
+  } else if (cyrillicRatio > 0.15 && latinRatio > 0.15) {
+    flags.push({ type: "mixed_language", severity: "low", message: "Mətn qarışıq əlifba ilə yazılıb (latın + kiril)" });
+  }
+
+  // 13. BÖYÜK HƏRF sui-istifadəsi
+  const upperCount = (ad.title.match(/[A-ZƏÖÜÇŞĞİ]/g) || []).length;
+  const letterCount = (ad.title.match(/[a-zA-ZəöüçşğıİƏÖÜÇŞĞ]/g) || []).length;
+  if (letterCount > 5 && upperCount / letterCount > 0.6) {
+    flags.push({ type: "caps_abuse", severity: "medium", message: "Başlıqda həddən artıq BÖYÜK HƏRF istifadəsi — spam görünüşü yaradır" });
+  }
+
   const highCount = flags.filter(f => f.severity === "high").length;
   const medCount = flags.filter(f => f.severity === "medium").length;
-  const score = Math.max(0, 100 - highCount * 30 - medCount * 15 - flags.filter(f => f.severity === "low").length * 5);
+  const score = Math.max(0, 100 - highCount * 25 - medCount * 12 - flags.filter(f => f.severity === "low").length * 4);
 
   return { passed: highCount === 0, score, flags };
 }

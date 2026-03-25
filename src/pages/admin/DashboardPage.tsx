@@ -357,6 +357,148 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Message Statistics & Payment Revenue */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-card rounded-lg border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <MessageSquare size={14} className="text-primary" />
+              Mesaj Statistikası
+            </h3>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/mesajlar")}>
+              Ətraflı →
+            </Button>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-2 rounded-lg bg-muted/50">
+              <p className="text-lg font-bold tabular-nums">2,590</p>
+              <p className="text-[10px] text-muted-foreground">Göndərilən</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-muted/50">
+              <p className="text-lg font-bold tabular-nums">2,230</p>
+              <p className="text-[10px] text-muted-foreground">Alınan</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-muted/50">
+              <p className="text-lg font-bold text-destructive tabular-nums">12</p>
+              <p className="text-[10px] text-muted-foreground">Spam</p>
+            </div>
+          </div>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={messageStats}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Bar dataKey="sent" name="Göndərilən" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="received" name="Alınan" fill="#22c55e" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-lg border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <CreditCard size={14} className="text-primary" />
+              Ödəniş Gəlir Qrafiki
+            </h3>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/odenisler")}>
+              Ətraflı →
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground">İllik gəlir</p>
+              <p className="text-lg font-bold tabular-nums">140,950 ₼</p>
+              <p className="text-[10px] text-admin-success font-medium">↑ 23.5%</p>
+            </div>
+            <div className="p-2 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground">Tranzaksiya</p>
+              <p className="text-lg font-bold tabular-nums">2,107</p>
+              <p className="text-[10px] text-admin-success font-medium">↑ 18.2%</p>
+            </div>
+          </div>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={paymentRevenueData}>
+                <defs>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Area type="monotone" dataKey="revenue" name="Gəlir (₼)" stroke="#22c55e" strokeWidth={2} fill="url(#revenueGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* VIP/Premium Activity */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {vipPremiumData.map((item) => (
+          <div key={item.name} className="bg-card rounded-lg border border-border p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {item.name === "VIP" ? <Crown size={16} style={{ color: item.color }} /> : item.name === "Premium" ? <Star size={16} style={{ color: item.color }} /> : <ArrowUpRight size={16} style={{ color: item.color }} />}
+                <h3 className="text-sm font-semibold">{item.name}</h3>
+              </div>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: `${item.color}20`, color: item.color }}>Aktiv</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-muted-foreground">Aktiv elanlar</span>
+                <span className="text-xl font-bold tabular-nums">{item.active}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-muted-foreground">Gəlir</span>
+                <span className="text-sm font-semibold tabular-nums">{item.revenue.toLocaleString()} ₼</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                <div className="h-1.5 rounded-full transition-all" style={{ width: `${(item.active / 856) * 100}%`, background: item.color }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* VIP/Premium Trend */}
+      <div className="bg-card rounded-lg border border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Crown size={14} className="text-amber-500" />
+            VIP / Premium / İrəli Aktivlik Trendi
+          </h3>
+          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded">Son 14 gün</span>
+        </div>
+        <div className="h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={vipTrendData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+              <Line type="monotone" dataKey="vip" name="VIP" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="premium" name="Premium" stroke="#a855f7" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="ireli" name="İrəli" stroke="#3b82f6" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex gap-4 mt-3 justify-center">
+          {[{ name: "VIP", color: "#f59e0b" }, { name: "Premium", color: "#a855f7" }, { name: "İrəli", color: "#3b82f6" }].map((l) => (
+            <div key={l.name} className="flex items-center gap-1.5 text-xs">
+              <span className="w-2.5 h-0.5 rounded-full" style={{ background: l.color }} />
+              {l.name}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* System Health Strip */}
       <div className="bg-card rounded-lg border border-border p-4">
         <div className="flex items-center justify-between mb-3">

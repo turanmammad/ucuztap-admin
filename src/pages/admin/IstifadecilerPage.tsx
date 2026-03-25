@@ -371,9 +371,27 @@ export default function IstifadecilerPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDirState] = useState<SortDir>(null);
   const perPage = 10;
 
-  const filtered = users.filter((u) => {
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDirState(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDirState("asc");
+    }
+  };
+
+  const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+  const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+
+  let filtered = users.filter((u) => {
     if (roleFilter !== "all") {
       const roleMap: Record<string, string> = { user: "İstifadəçi", mod: "Moderator", admin: "Admin" };
       if (u.role !== roleMap[roleFilter]) return false;
@@ -382,9 +400,14 @@ export default function IstifadecilerPage() {
       if (statusFilter === "aktiv" && u.status !== "aktiv") return false;
       if (statusFilter === "blok" && u.status !== "bloklanmis") return false;
     }
+    if (!isInDateRange(u.date, fromStr, toStr)) return false;
     if (searchQuery && !u.name.toLowerCase().includes(searchQuery.toLowerCase()) && !u.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof UserData, sortDir);
+  }
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);

@@ -74,13 +74,36 @@ export default function MesajlarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
   const perPage = 20;
 
-  const filtered = messages.filter(m => {
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDir(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+  const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+
+  let filtered = messages.filter(m => {
     if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (!isInDateRange(m.date, fromStr, toStr)) return false;
     if (searchQuery && !m.from.toLowerCase().includes(searchQuery.toLowerCase()) && !m.to.toLowerCase().includes(searchQuery.toLowerCase()) && !m.subject.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof Message, sortDir);
+  }
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);

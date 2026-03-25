@@ -899,6 +899,102 @@ export default function ReklamlarPage() {
         ))}
       </div>
 
+      {/* New request alert */}
+      {newRequestCount > 0 && activeTab !== "requests" && (
+        <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg px-4 py-2.5 flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-full bg-admin-accent/10 flex items-center justify-center">
+              <FileText size={14} className="text-admin-accent" />
+            </span>
+            <div>
+              <p className="text-xs font-medium">{newRequestCount} yeni reklam sorğusu</p>
+              {pendingPaymentCount > 0 && <p className="text-[10px] text-muted-foreground">{pendingPaymentCount} ödəniş gözləyir</p>}
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setActiveTab("requests")} className="text-[10px] h-7 border-admin-accent/30 text-admin-accent">
+            Sorğulara keç
+          </Button>
+        </div>
+      )}
+
+      {/* === REQUESTS TAB === */}
+      {activeTab === "requests" && (
+        <div className="space-y-3">
+          {/* Request stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {[
+              { label: "Ümumi", value: requests.length, color: "text-foreground" },
+              { label: "Yeni", value: newRequestCount, color: "text-amber-500" },
+              { label: "Təsdiqləndi", value: requests.filter(r => r.status === "təsdiqləndi").length, color: "text-blue-500" },
+              { label: "Ödənilib", value: requests.filter(r => r.status === "ödənilib").length, color: "text-emerald-500" },
+              { label: "Rədd", value: requests.filter(r => r.status === "rədd").length, color: "text-red-500" },
+            ].map(s => (
+              <div key={s.label} className="bg-card rounded-lg border border-border p-3 text-center">
+                <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Request cards */}
+          <div className="space-y-2">
+            {requests.map(req => {
+              const slot = slots.find(s => s.id === req.slotId);
+              const st = requestStatusConfig[req.status];
+              const ps = paymentStatusConfig[req.paymentStatus];
+              const dur = durationOptions.find(d => d.id === req.duration);
+              return (
+                <div key={req.id} onClick={() => setSelectedRequest(req)}
+                  className={cn(
+                    "bg-card rounded-lg border border-border p-4 cursor-pointer hover:shadow-md transition-all",
+                    req.status === "yeni" && "border-admin-accent/30 bg-admin-accent/[0.02]"
+                  )}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground">#{req.id}</span>
+                        <span className="font-medium text-sm">{req.company}</span>
+                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", st.class)}>{st.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{req.description}</p>
+                      <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1"><User size={10} /> {req.advertiser}</span>
+                        <span className="flex items-center gap-1"><Layout size={10} /> {slot?.name || req.slotId}</span>
+                        <span className="flex items-center gap-1"><CalendarDays size={10} /> {dur?.label}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} /> {req.createdAt.split(" ")[0]}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-lg font-bold text-admin-accent">{req.totalPrice} ₼</p>
+                      <div className="flex items-center gap-1 justify-end mt-1">
+                        <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium", ps.class)}>{ps.label}</span>
+                      </div>
+                      {req.status === "yeni" && (
+                        <div className="flex gap-1 mt-2" onClick={e => e.stopPropagation()}>
+                          <Button size="sm" className="h-6 text-[10px] bg-admin-success text-primary-foreground hover:bg-admin-success/90 px-2" onClick={() => handleApproveRequest(req.id)}>
+                            <Check size={10} className="mr-0.5" /> Təsdiqlə
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-6 text-[10px] text-admin-danger border-admin-danger/30 px-2" onClick={() => {
+                            handleRejectRequest(req.id, "Admin tərəfindən rədd edildi");
+                          }}>
+                            <X size={10} />
+                          </Button>
+                        </div>
+                      )}
+                      {(req.status === "təsdiqləndi" && req.paymentStatus === "gözləyir") && (
+                        <Button size="sm" className="h-6 text-[10px] bg-admin-accent text-accent-foreground hover:bg-admin-accent/90 px-2 mt-2" onClick={e => { e.stopPropagation(); setSelectedRequest(req); }}>
+                          <CreditCard size={10} className="mr-0.5" /> Ödəniş
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* === BANNERS TAB === */}
       {activeTab === "banners" && (
         <div className="bg-card rounded-lg border border-border overflow-x-auto">

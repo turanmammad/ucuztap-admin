@@ -745,7 +745,47 @@ export default function ElanlarPage() {
               <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">Gözləmədəki elanları nəzərdən keçirin</p>
             </div>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setStatusFilter("gozlemede")} className="border-admin-warning/30 text-admin-warning hover:bg-admin-warning/5 text-[10px] sm:text-xs h-7 sm:h-8 shrink-0">Göstər</Button>
+          <div className="flex gap-1.5 shrink-0">
+            <Button size="sm" variant="outline" onClick={() => setStatusFilter("gozlemede")} className="border-admin-warning/30 text-admin-warning hover:bg-admin-warning/5 text-[10px] sm:text-xs h-7 sm:h-8">Göstər</Button>
+            <Button size="sm" onClick={handleAiScan} disabled={aiScanning} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90 text-[10px] sm:text-xs h-7 sm:h-8">
+              {aiScanning ? <><Loader2 size={12} className="mr-1 animate-spin" /> Yoxlanır...</> : <><Bot size={12} className="mr-1" /> AI Filtr</>}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Scan Progress */}
+      {aiScanning && (
+        <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg p-3 space-y-2 animate-fade-in">
+          <div className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-2"><Bot size={14} className="text-admin-accent" /> AI filtrasiya davam edir...</span>
+            <span className="text-xs font-mono">{aiScanProgress}%</span>
+          </div>
+          <Progress value={aiScanProgress} className="h-2" />
+          <p className="text-[10px] text-muted-foreground">Spam, təkrar elan, nömrə aşkarlanması, qiymət analizi yoxlanılır...</p>
+        </div>
+      )}
+
+      {/* AI Scan Results Summary */}
+      {aiScanDone && !aiScanning && (
+        <div className="bg-admin-success/5 border border-admin-success/20 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldCheck size={16} className="text-admin-success shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-medium">
+                AI Filtrasiya nəticəsi: {ads.filter(a => a.status === "gozlemede" && a.aiCheck?.passed).length} təmiz, {ads.filter(a => a.status === "gozlemede" && a.aiCheck && !a.aiCheck.passed).length} problemli
+              </p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Təmiz elanları avtomatik təsdiqləyə bilərsiniz</p>
+            </div>
+          </div>
+          <div className="flex gap-1.5 shrink-0">
+            <Button size="sm" onClick={handleAutoApprove} className="bg-admin-success text-primary-foreground hover:bg-admin-success/90 text-[10px] sm:text-xs h-7 sm:h-8">
+              <Check size={12} className="mr-1" /> Təmizləri təsdiqlə
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setAiScanDone(false)} className="h-7 sm:h-8 text-[10px]">
+              <X size={12} />
+            </Button>
+          </div>
         </div>
       )}
 

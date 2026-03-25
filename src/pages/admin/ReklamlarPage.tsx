@@ -103,11 +103,34 @@ const mockBanners: Banner[] = [
   { id: 7, title: "ABB iç dizayn", advertiser: "ABB Group", slotId: "category-top", imageUrl: "", targetUrl: "https://abb-group.az", startDate: "2026-03-22", endDate: "2026-04-22", status: "pauzada", impressions: 45200, clicks: 620, ctr: 1.37, revenue: 250, aiGenerated: false },
 ];
 
+const mockRequests: AdRequest[] = [
+  { id: 501, advertiser: "Əhməd Hüseynov", company: "TechStore AZ", email: "ahmed@techstore.az", phone: "+994 50 444 55 66", slotId: "header-top", description: "Yeni iPhone 16 satışı üçün reklam banneri. Qara fonda ağ yazı ilə.", targetUrl: "https://techstore.az/iphone16", duration: "1m", durationDays: 30, totalPrice: 500, status: "yeni", paymentStatus: "gözləyir", createdAt: "2026-03-24 14:30", imageUploaded: true },
+  { id: 502, advertiser: "Nigar Əliyeva", company: "GlamBeauty", email: "nigar@glambeauty.az", phone: "+994 55 333 22 11", slotId: "sidebar-right", description: "Kosmetika mağazası üçün bahar kampaniyası. Çəhrayı tonlarda.", targetUrl: "https://glambeauty.az", duration: "2w", durationDays: 14, totalPrice: 240, status: "yeni", paymentStatus: "gözləyir", createdAt: "2026-03-24 10:15", imageUploaded: false },
+  { id: 503, advertiser: "Rəşad Məmmədov", company: "AutoPlus", email: "rashad@autoplus.az", phone: "+994 70 555 44 33", slotId: "listing-inline", description: "Avtomobil təmir xidmətləri reklamı.", targetUrl: "https://autoplus.az", duration: "1w", durationDays: 7, totalPrice: 180, status: "təsdiqləndi", paymentStatus: "gözləyir", createdAt: "2026-03-23 16:45", imageUploaded: true },
+  { id: 504, advertiser: "Kamran Nəsirov", company: "FoodDelivery", email: "kamran@fooddelivery.az", phone: "+994 50 777 88 99", slotId: "header-mobile", description: "Yemək çatdırılma xidməti, pulsuz çatdırılma kampaniyası.", targetUrl: "https://fooddelivery.az", duration: "3m", durationDays: 90, totalPrice: 765, status: "ödənilib", paymentStatus: "ödənilib", paymentMethod: "Bank köçürməsi", paymentDate: "2026-03-22", createdAt: "2026-03-20 09:00", imageUploaded: true },
+  { id: 505, advertiser: "Leyla Həsənova", company: "EduCenter", email: "leyla@educenter.az", phone: "+994 55 222 33 44", slotId: "detail-bottom", description: "İngilis dili kursları reklamı.", targetUrl: "https://educenter.az", duration: "1d", durationDays: 1, totalPrice: 18, status: "rədd", paymentStatus: "ləğv", note: "Banner keyfiyyəti aşağıdır, yeni dizayn tələb olunur.", createdAt: "2026-03-22 11:30", imageUploaded: true },
+  { id: 506, advertiser: "Orxan Babayev", company: "SportMax", email: "orxan@sportmax.az", phone: "+994 70 111 22 33", slotId: "sidebar-sticky", description: "İdman avadanlıqları, 40% endirim.", targetUrl: "https://sportmax.az", duration: "1m", durationDays: 30, totalPrice: 700, status: "aktiv", paymentStatus: "ödənilib", paymentMethod: "Kart", paymentDate: "2026-03-18", createdAt: "2026-03-17 13:20", imageUploaded: true },
+];
+
 const statusConfig: Record<string, { label: string; class: string }> = {
   aktiv: { label: "Aktiv", class: "bg-emerald-500/10 text-emerald-600" },
   gozlemede: { label: "Gözləmədə", class: "bg-amber-500/10 text-amber-600" },
   bitib: { label: "Bitib", class: "bg-gray-500/10 text-gray-500" },
   pauzada: { label: "Pauzada", class: "bg-blue-500/10 text-blue-600" },
+};
+
+const requestStatusConfig: Record<string, { label: string; class: string }> = {
+  yeni: { label: "Yeni sorğu", class: "bg-amber-500/10 text-amber-600" },
+  "təsdiqləndi": { label: "Təsdiqləndi", class: "bg-blue-500/10 text-blue-600" },
+  "rədd": { label: "Rədd edildi", class: "bg-red-500/10 text-red-600" },
+  "ödənilib": { label: "Ödənilib", class: "bg-emerald-500/10 text-emerald-600" },
+  aktiv: { label: "Aktiv", class: "bg-emerald-500/10 text-emerald-600" },
+};
+
+const paymentStatusConfig: Record<string, { label: string; class: string; icon: typeof CreditCard }> = {
+  "gözləyir": { label: "Gözləyir", class: "bg-amber-500/10 text-amber-600", icon: Clock },
+  "ödənilib": { label: "Ödənilib", class: "bg-emerald-500/10 text-emerald-600", icon: Check },
+  "ləğv": { label: "Ləğv", class: "bg-red-500/10 text-red-600", icon: X },
 };
 
 const deviceIcon = { all: Monitor, desktop: Monitor, mobile: Smartphone };

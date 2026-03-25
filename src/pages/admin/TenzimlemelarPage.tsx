@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Save, Shield, Globe, Bell, Database, Palette, Lock, FileText, Zap, Server } from "lucide-react";
+import { Save, Shield, Globe, Bell, Database, Palette, Lock, FileText, Zap, Server, Mail, CreditCard } from "lucide-react";
 
 const tabs = ["Ümumi", "SEO", "Email", "Ödəniş", "Limitlər", "Rollar", "Bildirişlər", "Təhlükəsizlik", "Görünüş", "API"];
 

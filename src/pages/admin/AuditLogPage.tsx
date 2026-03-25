@@ -3,6 +3,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { DateRangeFilter, ExcelExportButton } from "@/components/admin/TableToolbar";
+import { SortableHeader } from "@/components/admin/SortableHeader";
+import { exportToExcel, isInDateRange, sortData, nextSortDir, type SortDir } from "@/lib/table-utils";
+import { format } from "date-fns";
 
 const allLogs = [
   { date: "2026-03-23 14:23:01", admin: "Admin User", action: "Elan təsdiqləndi", detail: "#10042 — Mercedes C220d", ip: "185.129.xx.xx" },
@@ -26,17 +30,49 @@ const actionMap: Record<string, string[]> = {
 export default function AuditLogPage() {
   const [adminSearch, setAdminSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
 
-  const filtered = allLogs.filter((l) => {
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDir(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  let filtered = allLogs.filter((l) => {
     if (adminSearch && !l.admin.toLowerCase().includes(adminSearch.toLowerCase())) return false;
     if (actionFilter !== "all") {
       const keywords = actionMap[actionFilter] || [];
       if (!keywords.some((k) => l.action.toLowerCase().includes(k))) return false;
     }
+    const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+    const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+    if (!isInDateRange(l.date, fromStr, toStr)) return false;
     return true;
   });
 
-  const hasFilters = adminSearch || actionFilter !== "all";
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof typeof allLogs[0], sortDir);
+  }
+
+  const hasFilters = adminSearch || actionFilter !== "all" || dateFrom || dateTo;
+
+  const handleExcel = () => {
+    exportToExcel(filtered, [
+      { key: "date", label: "Tarix" },
+      { key: "admin", label: "Admin" },
+      { key: "action", label: "Əməliyyat" },
+      { key: "detail", label: "Detallar" },
+      { key: "ip", label: "IP" },
+    ], "audit-log");
+  };
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -60,8 +96,10 @@ export default function AuditLogPage() {
             <SelectItem value="settings">Tənzimləmə</SelectItem>
           </SelectContent>
         </Select>
+        <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={setDateFrom} onDateToChange={setDateTo} />
+        <ExcelExportButton onClick={handleExcel} />
         {hasFilters && (
-          <Button size="sm" variant="ghost" onClick={() => { setAdminSearch(""); setActionFilter("all"); }} className="text-xs">
+          <Button size="sm" variant="ghost" onClick={() => { setAdminSearch(""); setActionFilter("all"); setDateFrom(undefined); setDateTo(undefined); }} className="text-xs">
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}
@@ -72,9 +110,9 @@ export default function AuditLogPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 font-medium">Tarix</th>
-              <th className="p-3 font-medium">Admin</th>
-              <th className="p-3 font-medium">Əməliyyat</th>
+              <SortableHeader label="Tarix" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Admin" sortKey="admin" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Əməliyyat" sortKey="action" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">Detallar</th>
               <th className="p-3 font-medium">IP</th>
             </tr>

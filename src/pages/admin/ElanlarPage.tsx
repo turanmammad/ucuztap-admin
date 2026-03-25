@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Search, Eye, Check, X, Trash2, Edit, Bot, Filter, Calendar, ChevronLeft, ChevronRight, Crown, Zap, ArrowUp, Star, Save } from "lucide-react";
+import { Search, Eye, Check, X, Trash2, Edit, Bot, Filter, Calendar, ChevronLeft, ChevronRight, Crown, Zap, ArrowUp, Star, Save, ImagePlus, XCircle } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -147,6 +147,47 @@ function AdEditDialog({ ad, open, onClose, onSave }: {
           <div>
             <label className="text-sm font-medium">Təsvir</label>
             <Textarea value={form.description || ""} onChange={e => update("description", e.target.value)} className="mt-1" rows={4} />
+          </div>
+
+          {/* Images Section */}
+          <div className="border-t border-border pt-4">
+            <label className="text-sm font-semibold flex items-center gap-2 mb-3">
+              <ImagePlus size={14} className="text-admin-accent" /> Şəkillər ({(form.images || []).length})
+            </label>
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+              {(form.images || []).map((img, idx) => {
+                const hue = ((img.charCodeAt(4) || 0) * 37 + idx * 60) % 360;
+                return (
+                  <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-border">
+                    <div
+                      className="w-full h-full flex items-center justify-center text-[10px] text-white font-mono"
+                      style={{ background: `hsl(${hue}, 45%, 55%)` }}
+                    >
+                      {idx + 1}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => update("images", (form.images || []).filter((_, j) => j !== idx))}
+                      className="absolute top-0.5 right-0.5 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <XCircle size={14} />
+                    </button>
+                  </div>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => {
+                  const newImg = `img_new_${Date.now()}`;
+                  update("images", [...(form.images || []), newImg]);
+                  toast({ title: "🖼️ Şəkil əlavə edildi", description: "Yeni şəkil uğurla yükləndi" });
+                }}
+                className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-admin-accent/50 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-admin-accent transition-colors"
+              >
+                <ImagePlus size={18} />
+                <span className="text-[10px]">Əlavə et</span>
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

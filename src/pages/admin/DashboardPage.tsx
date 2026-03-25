@@ -23,6 +23,47 @@ const pieData = [
   { name: "Digər", value: 8, color: "#6b7280" },
 ];
 
+// Message statistics data
+const messageStats = [
+  { day: "Baz.e", sent: 320, received: 280 },
+  { day: "Ç.ax", sent: 450, received: 390 },
+  { day: "Çər", sent: 380, received: 340 },
+  { day: "C.ax", sent: 520, received: 460 },
+  { day: "Cümə", sent: 490, received: 420 },
+  { day: "Şən", sent: 250, received: 200 },
+  { day: "Bazar", sent: 180, received: 140 },
+];
+
+// Payment revenue data (last 12 months)
+const paymentRevenueData = [
+  { month: "Yan", revenue: 8200, transactions: 120 },
+  { month: "Fev", revenue: 9100, transactions: 135 },
+  { month: "Mar", revenue: 10500, transactions: 158 },
+  { month: "Apr", revenue: 9800, transactions: 142 },
+  { month: "May", revenue: 11200, transactions: 168 },
+  { month: "İyn", revenue: 12800, transactions: 192 },
+  { month: "İyl", revenue: 11500, transactions: 175 },
+  { month: "Avq", revenue: 13200, transactions: 198 },
+  { month: "Sen", revenue: 14100, transactions: 210 },
+  { month: "Okt", revenue: 12900, transactions: 195 },
+  { month: "Noy", revenue: 15200, transactions: 228 },
+  { month: "Dek", revenue: 12450, transactions: 186 },
+];
+
+// VIP/Premium activity data
+const vipPremiumData = [
+  { name: "VIP", active: 342, revenue: 5130, color: "#f59e0b" },
+  { name: "Premium", active: 218, revenue: 3270, color: "#a855f7" },
+  { name: "İrəli", active: 856, revenue: 4280, color: "#3b82f6" },
+];
+
+const vipTrendData = Array.from({ length: 14 }, (_, i) => ({
+  day: `${i + 1}`,
+  vip: Math.floor(20 + Math.random() * 15),
+  premium: Math.floor(12 + Math.random() * 10),
+  ireli: Math.floor(40 + Math.random() * 25),
+}));
+
 interface RecentAd {
   id: number;
   title: string;

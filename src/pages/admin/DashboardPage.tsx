@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { FileText, BarChart3, Users, Clock, Check, X, Eye, Activity, CheckCircle2, AlertTriangle, Shield } from "lucide-react";
+import { FileText, BarChart3, Users, Clock, Check, X, Eye, Activity, CheckCircle2, AlertTriangle, Shield, MessageSquare, CreditCard, Crown, Star, ArrowUpRight } from "lucide-react";
 import { KpiCard } from "@/components/admin/KpiCard";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
+  PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area,
 } from "recharts";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,47 @@ const pieData = [
   { name: "Xidmətlər", value: 12, color: "#a855f7" },
   { name: "Digər", value: 8, color: "#6b7280" },
 ];
+
+// Message statistics data
+const messageStats = [
+  { day: "Baz.e", sent: 320, received: 280 },
+  { day: "Ç.ax", sent: 450, received: 390 },
+  { day: "Çər", sent: 380, received: 340 },
+  { day: "C.ax", sent: 520, received: 460 },
+  { day: "Cümə", sent: 490, received: 420 },
+  { day: "Şən", sent: 250, received: 200 },
+  { day: "Bazar", sent: 180, received: 140 },
+];
+
+// Payment revenue data (last 12 months)
+const paymentRevenueData = [
+  { month: "Yan", revenue: 8200, transactions: 120 },
+  { month: "Fev", revenue: 9100, transactions: 135 },
+  { month: "Mar", revenue: 10500, transactions: 158 },
+  { month: "Apr", revenue: 9800, transactions: 142 },
+  { month: "May", revenue: 11200, transactions: 168 },
+  { month: "İyn", revenue: 12800, transactions: 192 },
+  { month: "İyl", revenue: 11500, transactions: 175 },
+  { month: "Avq", revenue: 13200, transactions: 198 },
+  { month: "Sen", revenue: 14100, transactions: 210 },
+  { month: "Okt", revenue: 12900, transactions: 195 },
+  { month: "Noy", revenue: 15200, transactions: 228 },
+  { month: "Dek", revenue: 12450, transactions: 186 },
+];
+
+// VIP/Premium activity data
+const vipPremiumData = [
+  { name: "VIP", active: 342, revenue: 5130, color: "#f59e0b" },
+  { name: "Premium", active: 218, revenue: 3270, color: "#a855f7" },
+  { name: "İrəli", active: 856, revenue: 4280, color: "#3b82f6" },
+];
+
+const vipTrendData = Array.from({ length: 14 }, (_, i) => ({
+  day: `${i + 1}`,
+  vip: Math.floor(20 + Math.random() * 15),
+  premium: Math.floor(12 + Math.random() * 10),
+  ireli: Math.floor(40 + Math.random() * 25),
+}));
 
 interface RecentAd {
   id: number;
@@ -313,6 +354,148 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      {/* Message Statistics & Payment Revenue */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="bg-card rounded-lg border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <MessageSquare size={14} className="text-primary" />
+              Mesaj Statistikası
+            </h3>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/mesajlar")}>
+              Ətraflı →
+            </Button>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-2 rounded-lg bg-muted/50">
+              <p className="text-lg font-bold tabular-nums">2,590</p>
+              <p className="text-[10px] text-muted-foreground">Göndərilən</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-muted/50">
+              <p className="text-lg font-bold tabular-nums">2,230</p>
+              <p className="text-[10px] text-muted-foreground">Alınan</p>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-muted/50">
+              <p className="text-lg font-bold text-destructive tabular-nums">12</p>
+              <p className="text-[10px] text-muted-foreground">Spam</p>
+            </div>
+          </div>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={messageStats}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Bar dataKey="sent" name="Göndərilən" fill="#3b82f6" radius={[2, 2, 0, 0]} />
+                <Bar dataKey="received" name="Alınan" fill="#22c55e" radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-lg border border-border p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <CreditCard size={14} className="text-primary" />
+              Ödəniş Gəlir Qrafiki
+            </h3>
+            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => navigate("/odenisler")}>
+              Ətraflı →
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground">İllik gəlir</p>
+              <p className="text-lg font-bold tabular-nums">140,950 ₼</p>
+              <p className="text-[10px] text-admin-success font-medium">↑ 23.5%</p>
+            </div>
+            <div className="p-2 rounded-lg bg-muted/50">
+              <p className="text-[10px] text-muted-foreground">Tranzaksiya</p>
+              <p className="text-lg font-bold tabular-nums">2,107</p>
+              <p className="text-[10px] text-admin-success font-medium">↑ 18.2%</p>
+            </div>
+          </div>
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={paymentRevenueData}>
+                <defs>
+                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+                <Area type="monotone" dataKey="revenue" name="Gəlir (₼)" stroke="#22c55e" strokeWidth={2} fill="url(#revenueGrad)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* VIP/Premium Activity */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {vipPremiumData.map((item) => (
+          <div key={item.name} className="bg-card rounded-lg border border-border p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {item.name === "VIP" ? <Crown size={16} style={{ color: item.color }} /> : item.name === "Premium" ? <Star size={16} style={{ color: item.color }} /> : <ArrowUpRight size={16} style={{ color: item.color }} />}
+                <h3 className="text-sm font-semibold">{item.name}</h3>
+              </div>
+              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ background: `${item.color}20`, color: item.color }}>Aktiv</span>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-muted-foreground">Aktiv elanlar</span>
+                <span className="text-xl font-bold tabular-nums">{item.active}</span>
+              </div>
+              <div className="flex justify-between items-baseline">
+                <span className="text-xs text-muted-foreground">Gəlir</span>
+                <span className="text-sm font-semibold tabular-nums">{item.revenue.toLocaleString()} ₼</span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                <div className="h-1.5 rounded-full transition-all" style={{ width: `${(item.active / 856) * 100}%`, background: item.color }} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* VIP/Premium Trend */}
+      <div className="bg-card rounded-lg border border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Crown size={14} className="text-amber-500" />
+            VIP / Premium / İrəli Aktivlik Trendi
+          </h3>
+          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded">Son 14 gün</span>
+        </div>
+        <div className="h-52">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={vipTrendData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="day" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+              <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+              <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }} />
+              <Line type="monotone" dataKey="vip" name="VIP" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="premium" name="Premium" stroke="#a855f7" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="ireli" name="İrəli" stroke="#3b82f6" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex gap-4 mt-3 justify-center">
+          {[{ name: "VIP", color: "#f59e0b" }, { name: "Premium", color: "#a855f7" }, { name: "İrəli", color: "#3b82f6" }].map((l) => (
+            <div key={l.name} className="flex items-center gap-1.5 text-xs">
+              <span className="w-2.5 h-0.5 rounded-full" style={{ background: l.color }} />
+              {l.name}
+            </div>
+          ))}
         </div>
       </div>
 

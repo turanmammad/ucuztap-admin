@@ -200,8 +200,20 @@ function BannerFormDialog({ banner, slots, open, onClose, onSave }: {
   const [advertiser, setAdvertiser] = useState(banner?.advertiser || "");
   const [slotId, setSlotId] = useState(banner?.slotId || slots[0]?.id || "");
   const [targetUrl, setTargetUrl] = useState(banner?.targetUrl || "");
-  const [startDate, setStartDate] = useState(banner?.startDate || "");
-  const [endDate, setEndDate] = useState(banner?.endDate || "");
+  const [duration, setDuration] = useState("1m");
+  const [startDate, setStartDate] = useState(banner?.startDate || new Date().toISOString().split("T")[0]);
+
+  const selectedSlot = slots.find(s => s.id === slotId);
+  const selectedDuration = durationOptions.find(d => d.id === duration);
+  const totalPrice = selectedSlot && selectedDuration ? selectedSlot.priceDaily * selectedDuration.multiplier : 0;
+
+  // Auto-calculate end date
+  const endDate = (() => {
+    if (!startDate || !selectedDuration) return "";
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + selectedDuration.days);
+    return d.toISOString().split("T")[0];
+  })();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -221,10 +233,41 @@ function BannerFormDialog({ banner, slots, open, onClose, onSave }: {
             </Select>
           </div>
           <div><label className="text-sm font-medium">Hədəf URL</label><Input value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="mt-1" placeholder="https://..." /></div>
+
+          {/* Duration selection */}
+          <div>
+            <label className="text-sm font-medium">Müddət</label>
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 mt-1">
+              {durationOptions.map(d => (
+                <button key={d.id} onClick={() => setDuration(d.id)}
+                  className={cn(
+                    "px-2 py-1.5 rounded-md border text-xs font-medium transition-all text-center",
+                    duration === d.id ? "border-admin-accent bg-admin-accent/10 text-admin-accent" : "border-border text-muted-foreground hover:border-admin-accent/40"
+                  )}>
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div><label className="text-sm font-medium">Başlama</label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1" /></div>
-            <div><label className="text-sm font-medium">Bitmə</label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1" /></div>
+            <div>
+              <label className="text-sm font-medium">Bitmə</label>
+              <Input type="date" value={endDate} readOnly className="mt-1 bg-muted/30" />
+            </div>
           </div>
+
+          {/* Price summary */}
+          {selectedSlot && selectedDuration && (
+            <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg p-3 flex items-center justify-between">
+              <div className="text-xs space-y-0.5">
+                <p className="text-muted-foreground">{selectedSlot.name} • {selectedDuration.label}</p>
+                <p className="text-muted-foreground">Günlük: {selectedSlot.priceDaily} ₼ × {selectedDuration.multiplier}</p>
+              </div>
+              <p className="text-lg font-bold text-admin-accent">{totalPrice} ₼</p>
+            </div>
+          )}
 
           {/* Image upload placeholder */}
           <div>
@@ -233,7 +276,7 @@ function BannerFormDialog({ banner, slots, open, onClose, onSave }: {
               <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Şəkil yükləyin və ya sürükləyin</p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                {slots.find(s => s.id === slotId)?.size || "728×90"} • PNG, JPG, GIF, WebP • Max 2MB
+                {selectedSlot?.size || "728×90"} • PNG, JPG, GIF, WebP • Max 2MB
               </p>
             </div>
           </div>

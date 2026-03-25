@@ -361,8 +361,21 @@ export default function MagazalarPage() {
   const [editShop, setEditShop] = useState<Shop | null>(null);
   const [planFilter, setPlanFilter] = useState("all");
   const [upgradeShop, setUpgradeShop] = useState<Shop | null>(null);
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
 
-  const filtered = shops.filter((s) => {
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDir(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  let filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
     if (planFilter !== "all") {
       const planMap: Record<string, string> = { free: "Pulsuz", business: "Biznes", premium: "Premium" };
@@ -371,6 +384,10 @@ export default function MagazalarPage() {
     if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase()) && !s.owner.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof Shop, sortDir);
+  }
 
   const handleApprove = (id: number) => {
     setShops((prev) => prev.map((s) => s.id === id ? { ...s, status: "aktiv" as const, verified: true } : s));

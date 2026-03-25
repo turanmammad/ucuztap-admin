@@ -14,6 +14,7 @@ import OdenislerPage from "@/pages/admin/OdenislerPage";
 import SikayetlerPage from "@/pages/admin/SikayetlerPage";
 import HesabatlarPage from "@/pages/admin/HesabatlarPage";
 import AiPage from "@/pages/admin/AiPage";
+import MesajlarPage from "@/pages/admin/MesajlarPage";
 import EmailSmsPage from "@/pages/admin/EmailSmsPage";
 import AuditLogPage from "@/pages/admin/AuditLogPage";
 import TenzimlemelarPage from "@/pages/admin/TenzimlemelarPage";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/sikayetler" element={<SikayetlerPage />} />
             <Route path="/hesabatlar" element={<HesabatlarPage />} />
             <Route path="/ai" element={<AiPage />} />
+            <Route path="/mesajlar" element={<MesajlarPage />} />
             <Route path="/email-sms" element={<EmailSmsPage />} />
             <Route path="/audit-log" element={<AuditLogPage />} />
             <Route path="/sistem" element={<SystemStatusPage />} />

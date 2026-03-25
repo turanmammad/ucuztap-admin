@@ -1169,6 +1169,7 @@ export default function ReklamlarPage() {
       <SlotEditDialog slot={editSlot} open={!!editSlot} onClose={() => setEditSlot(null)} onSave={handleSlotSave} />
       <BannerFormDialog banner={editBanner} slots={slots} open={bannerForm} onClose={() => { setBannerForm(false); setEditBanner(null); }} onSave={handleBannerCreate} />
       <AiBannerDialog slots={slots} open={aiDialog} onClose={() => setAiDialog(false)} onGenerate={handleAiGenerate} />
+      <RequestDetailDialog request={selectedRequest} slots={slots} open={!!selectedRequest} onClose={() => setSelectedRequest(null)} onApprove={handleApproveRequest} onReject={handleRejectRequest} onConfirmPayment={handleConfirmPayment} />
     </div>
   );
 }

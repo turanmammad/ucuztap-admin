@@ -6,6 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MessageSquare, Search, Eye, Flag, Ban, X, AlertTriangle, Clock, User, ChevronLeft, ChevronRight, BarChart3, Shield } from "lucide-react";
+import { DateRangeFilter, ExcelExportButton } from "@/components/admin/TableToolbar";
+import { SortableHeader } from "@/components/admin/SortableHeader";
+import { exportToExcel, isInDateRange, sortData, nextSortDir, type SortDir } from "@/lib/table-utils";
+import { format } from "date-fns";
 
 interface Message {
   id: number;
@@ -70,13 +74,36 @@ export default function MesajlarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
   const perPage = 20;
 
-  const filtered = messages.filter(m => {
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDir(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+  const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+
+  let filtered = messages.filter(m => {
     if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (!isInDateRange(m.date, fromStr, toStr)) return false;
     if (searchQuery && !m.from.toLowerCase().includes(searchQuery.toLowerCase()) && !m.to.toLowerCase().includes(searchQuery.toLowerCase()) && !m.subject.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof Message, sortDir);
+  }
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
@@ -141,8 +168,18 @@ export default function MesajlarPage() {
             <SelectItem value="blocked">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        {(statusFilter !== "all" || searchQuery) && (
-          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setStatusFilter("all"); setSearchQuery(""); }}>
+        <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={d => { setDateFrom(d); setCurrentPage(1); }} onDateToChange={d => { setDateTo(d); setCurrentPage(1); }} />
+        <ExcelExportButton onClick={() => exportToExcel(filtered, [
+          { key: "id", label: "ID" },
+          { key: "from", label: "Göndərən" },
+          { key: "fromEmail", label: "Göndərən Email" },
+          { key: "to", label: "Alan" },
+          { key: "subject", label: "Mövzu" },
+          { key: "status", label: "Status" },
+          { key: "date", label: "Tarix" },
+        ], "mesajlar")} />
+        {(statusFilter !== "all" || searchQuery || dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setStatusFilter("all"); setSearchQuery(""); setDateFrom(undefined); setDateTo(undefined); }}>
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}
@@ -155,13 +192,13 @@ export default function MesajlarPage() {
         <table className="w-full text-sm" style={{ minWidth: 750 }}>
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30 text-xs">
-              <th className="p-3 font-medium">ID</th>
-              <th className="p-3 font-medium">Göndərən</th>
-              <th className="p-3 font-medium">Alan</th>
-              <th className="p-3 font-medium">Mövzu</th>
+              <SortableHeader label="ID" sortKey="id" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Göndərən" sortKey="from" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Alan" sortKey="to" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Mövzu" sortKey="subject" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">Elan</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Tarix</th>
+              <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Tarix" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">Əməliyyat</th>
             </tr>
           </thead>

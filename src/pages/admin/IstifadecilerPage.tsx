@@ -8,6 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { DateRangeFilter, ExcelExportButton } from "@/components/admin/TableToolbar";
+import { SortableHeader } from "@/components/admin/SortableHeader";
+import { exportToExcel, isInDateRange, sortData, nextSortDir, type SortDir } from "@/lib/table-utils";
+import { format } from "date-fns";
 
 interface UserData {
   id: number;
@@ -367,9 +371,27 @@ export default function IstifadecilerPage() {
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [dateFrom, setDateFrom] = useState<Date | undefined>();
+  const [dateTo, setDateTo] = useState<Date | undefined>();
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDirState] = useState<SortDir>(null);
   const perPage = 10;
 
-  const filtered = users.filter((u) => {
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      const nd = nextSortDir(sortDir);
+      setSortDirState(nd);
+      if (!nd) setSortKey(null);
+    } else {
+      setSortKey(key);
+      setSortDirState("asc");
+    }
+  };
+
+  const fromStr = dateFrom ? format(dateFrom, "yyyy-MM-dd") : "";
+  const toStr = dateTo ? format(dateTo, "yyyy-MM-dd") : "";
+
+  let filtered = users.filter((u) => {
     if (roleFilter !== "all") {
       const roleMap: Record<string, string> = { user: "İstifadəçi", mod: "Moderator", admin: "Admin" };
       if (u.role !== roleMap[roleFilter]) return false;
@@ -378,9 +400,14 @@ export default function IstifadecilerPage() {
       if (statusFilter === "aktiv" && u.status !== "aktiv") return false;
       if (statusFilter === "blok" && u.status !== "bloklanmis") return false;
     }
+    if (!isInDateRange(u.date, fromStr, toStr)) return false;
     if (searchQuery && !u.name.toLowerCase().includes(searchQuery.toLowerCase()) && !u.email.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  if (sortKey && sortDir) {
+    filtered = sortData(filtered, sortKey as keyof UserData, sortDir);
+  }
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
   const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
@@ -438,8 +465,20 @@ export default function IstifadecilerPage() {
             <SelectItem value="blok">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        {(roleFilter !== "all" || statusFilter !== "all" || searchQuery) && (
-          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setRoleFilter("all"); setStatusFilter("all"); setSearchQuery(""); }}>
+        <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={d => { setDateFrom(d); setCurrentPage(1); }} onDateToChange={d => { setDateTo(d); setCurrentPage(1); }} />
+        <ExcelExportButton onClick={() => exportToExcel(filtered, [
+          { key: "id", label: "ID" },
+          { key: "name", label: "Ad" },
+          { key: "email", label: "Email" },
+          { key: "phone", label: "Telefon" },
+          { key: "ads", label: "Elan sayı" },
+          { key: "date", label: "Qeydiyyat" },
+          { key: "role", label: "Rol" },
+          { key: "status", label: "Status" },
+          { key: "totalSpent", label: "Xərc" },
+        ], "istifadeciler")} />
+        {(roleFilter !== "all" || statusFilter !== "all" || searchQuery || dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setRoleFilter("all"); setStatusFilter("all"); setSearchQuery(""); setDateFrom(undefined); setDateTo(undefined); }}>
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}
@@ -451,13 +490,13 @@ export default function IstifadecilerPage() {
         <table className="min-w-[850px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 font-medium w-[50px]">ID</th>
-              <th className="p-3 font-medium">Ad</th>
-              <th className="p-3 font-medium">Email</th>
+              <SortableHeader label="ID" sortKey="id" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[50px]" />
+              <SortableHeader label="Ad" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Email" sortKey="email" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium w-[120px]">Telefon</th>
-              <th className="p-3 font-medium w-[50px]">Elan</th>
-              <th className="p-3 font-medium w-[85px]">Qeydiyyat</th>
-              <th className="p-3 font-medium w-[75px]">Rol</th>
+              <SortableHeader label="Elan" sortKey="ads" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[50px]" />
+              <SortableHeader label="Qeydiyyat" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[85px]" />
+              <SortableHeader label="Rol" sortKey="role" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} className="w-[75px]" />
               <th className="p-3 font-medium w-[70px]">Status</th>
               <th className="p-3 font-medium w-[120px]">Əməliyyat</th>
             </tr>

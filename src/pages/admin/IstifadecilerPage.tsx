@@ -327,6 +327,8 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
 
   if (!user) return null;
 
+  const risk = user.riskProfile;
+
   const handleSendMsg = () => {
     if (!msg.trim()) return;
     toast({ title: "📧 Mesaj göndərildi", description: `${user.name} — ${msg.slice(0, 50)}...` });
@@ -338,15 +340,47 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
+          <DialogTitle className="flex items-center gap-3 flex-wrap">
             <span>İstifadəçi #{user.id}</span>
             <StatusBadge status={user.status} />
             <span className={`text-xs px-2 py-0.5 rounded font-medium ${roleColor[user.role]}`}>{user.role}</span>
             {user.verified && <span className="text-xs bg-admin-info/10 text-admin-info px-2 py-0.5 rounded">✓ Təsdiqlənmiş</span>}
+            {risk && (
+              <span className={cn("text-[10px] px-2 py-0.5 rounded font-medium", riskLevelConfig[risk.riskLevel].bgClass)}>
+                ⚠ Risk: {risk.riskScore}/100
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-5">
+          {/* Risk alert */}
+          {risk && risk.riskScore >= 25 && (
+            <div className={cn("rounded-lg border p-3 space-y-2 animate-fade-in",
+              risk.riskLevel === "kritik" ? "bg-admin-danger/5 border-admin-danger/30" :
+              risk.riskLevel === "yüksək" ? "bg-admin-danger/5 border-admin-danger/20" :
+              "bg-admin-warning/5 border-admin-warning/20"
+            )}>
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={14} className={riskLevelConfig[risk.riskLevel].class} />
+                <span className={cn("text-sm font-semibold", riskLevelConfig[risk.riskLevel].class)}>
+                  {riskLevelConfig[risk.riskLevel].label} — {risk.riskScore}/100
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">{risk.recommendation}</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {risk.flags.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1 text-[10px] bg-card rounded px-2 py-1 border border-border">
+                    <span className={cn("w-1.5 h-1.5 rounded-full",
+                      f.severity === "high" ? "bg-admin-danger" : f.severity === "medium" ? "bg-admin-warning" : "bg-muted-foreground"
+                    )} />
+                    <span className="font-medium">{riskFlagConfig[f.type].label}:</span>
+                    <span className="text-muted-foreground">{f.message}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex gap-4 items-start">
             <div className="w-16 h-16 rounded-full bg-admin-accent flex items-center justify-center text-xl font-bold text-accent-foreground shrink-0">{user.name[0]}</div>
             <div className="flex-1 min-w-0">

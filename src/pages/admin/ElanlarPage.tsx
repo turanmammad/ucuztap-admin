@@ -449,7 +449,40 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject, onEdit, onProm
         </DialogHeader>
 
         <div className="space-y-5">
-          {ad.aiFlag && ad.aiReason && (
+          {/* AI Check Results */}
+          {ad.aiCheck && (
+            <div className={cn("rounded-lg border p-3 space-y-2", ad.aiCheck.passed ? "bg-admin-success/5 border-admin-success/20" : "bg-admin-danger/5 border-admin-danger/20")}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className={ad.aiCheck.passed ? "text-admin-success" : "text-admin-danger"} />
+                  <span className="text-sm font-medium">{ad.aiCheck.passed ? "AI Filtr: Keçdi ✓" : "AI Filtr: Problem aşkarlandı"}</span>
+                </div>
+                <span className={cn("text-xs font-bold px-2 py-0.5 rounded", ad.aiCheck.score >= 70 ? "bg-admin-success/10 text-admin-success" : ad.aiCheck.score >= 40 ? "bg-admin-warning/10 text-admin-warning" : "bg-admin-danger/10 text-admin-danger")}>
+                  {ad.aiCheck.score}/100
+                </span>
+              </div>
+              <Progress value={ad.aiCheck.score} className="h-1.5" />
+              {ad.aiCheck.flags.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  {ad.aiCheck.flags.map((flag, idx) => {
+                    const cfg = flagConfig[flag.type];
+                    return (
+                      <div key={idx} className="flex items-start gap-2 text-xs">
+                        <cfg.icon size={12} className={cn("mt-0.5 shrink-0", cfg.color)} />
+                        <div>
+                          <span className={cn("font-medium", cfg.color)}>{cfg.label}</span>
+                          <span className={cn("ml-1 px-1 rounded text-[9px]", flag.severity === "high" ? "bg-admin-danger/10 text-admin-danger" : flag.severity === "medium" ? "bg-admin-warning/10 text-admin-warning" : "bg-muted text-muted-foreground")}>{flag.severity === "high" ? "yüksək" : flag.severity === "medium" ? "orta" : "aşağı"}</span>
+                          <p className="text-muted-foreground mt-0.5">{flag.message}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {ad.aiFlag && ad.aiReason && !ad.aiCheck && (
             <div className="bg-admin-warning/5 border border-admin-warning/20 rounded-lg p-3 flex items-start gap-2">
               <Bot size={16} className="text-admin-warning mt-0.5 shrink-0" />
               <div>
@@ -457,7 +490,7 @@ function AdDetailDialog({ ad, open, onClose, onApprove, onReject, onEdit, onProm
                 <p className="text-xs text-muted-foreground mt-0.5">{ad.aiReason}</p>
               </div>
             </div>
-          )}
+          )
 
           {/* Promotion badge */}
           {ad.promotion && (

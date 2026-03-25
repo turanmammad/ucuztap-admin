@@ -48,6 +48,38 @@ interface Banner {
   aiGenerated: boolean;
 }
 
+// Duration config
+const durationOptions = [
+  { id: "1d", label: "1 gün", days: 1, multiplier: 1 },
+  { id: "3d", label: "3 gün", days: 3, multiplier: 3 },
+  { id: "1w", label: "1 həftə", days: 7, multiplier: 6 },
+  { id: "2w", label: "2 həftə", days: 14, multiplier: 12 },
+  { id: "1m", label: "1 ay", days: 30, multiplier: 20 },
+  { id: "3m", label: "3 ay", days: 90, multiplier: 51 },
+  { id: "6m", label: "6 ay", days: 180, multiplier: 90 },
+];
+
+interface AdRequest {
+  id: number;
+  advertiser: string;
+  company: string;
+  email: string;
+  phone: string;
+  slotId: string;
+  description: string;
+  targetUrl: string;
+  duration: string; // duration option id
+  durationDays: number;
+  totalPrice: number;
+  status: "yeni" | "təsdiqləndi" | "rədd" | "ödənilib" | "aktiv";
+  paymentStatus: "gözləyir" | "ödənilib" | "ləğv";
+  paymentMethod?: string;
+  paymentDate?: string;
+  createdAt: string;
+  note?: string;
+  imageUploaded: boolean;
+}
+
 // === MOCK DATA ===
 const bannerSlots: BannerSlot[] = [
   { id: "header-top", name: "Header Üst Banner", location: "Ana səhifə — header üstü", size: "728×90", width: 728, height: 90, device: "desktop", priceDaily: 25, priceWeekly: 150, priceMonthly: 500, active: true, currentBanner: null },

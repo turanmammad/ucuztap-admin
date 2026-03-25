@@ -2,14 +2,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/admin/StatusBadge";
-import { Eye, Edit, Ban, Mail, Search, X, Phone, Calendar, MapPin, CreditCard, FileText, Clock, Shield, Send } from "lucide-react";
+import { Eye, Edit, Ban, Mail, Search, X, Phone, Calendar, MapPin, CreditCard, FileText, Clock, Shield, Send, Save, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-interface User {
+interface UserData {
   id: number;
   name: string;
   email: string;
@@ -28,7 +28,7 @@ interface User {
   activity: { action: string; detail: string; date: string }[];
 }
 
-const mockUsers: User[] = Array.from({ length: 15 }, (_, i) => ({
+const mockUsers: UserData[] = Array.from({ length: 15 }, (_, i) => ({
   id: 5000 + i,
   name: ["Əli Məmmədov", "Leyla Həsənova", "Rəşad Kərimov", "Nigar Əliyeva", "Tural İsmayılov", "Günel Əhmədova", "Orxan Babayev", "Səbinə İsmayılova"][i % 8],
   email: ["ali@mail.az", "leyla@gmail.com", "rashad@mail.az", "nigar@yahoo.com", "tural@mail.az", "gunel@gmail.com", "orxan@mail.az", "sebine@yahoo.com"][i % 8],
@@ -75,13 +75,110 @@ const roleColor: Record<string, string> = {
 
 const profileTabs = ["Ümumi", "Elanlar", "Ödənişlər", "Aktivlik"];
 
+// Full edit dialog for all user fields
+function UserEditDialog({ user, open, onClose, onSave }: {
+  user: UserData | null;
+  open: boolean;
+  onClose: () => void;
+  onSave: (user: UserData) => void;
+}) {
+  const [form, setForm] = useState<Partial<UserData>>({});
+
+  const syncForm = () => {
+    if (user) setForm({ ...user });
+  };
+  // Sync when user changes
+  if (user && form.id !== user.id) syncForm();
+
+  if (!user) return null;
+  const update = (key: keyof UserData, value: any) => setForm(prev => ({ ...prev, [key]: value }));
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><User size={18} /> İstifadəçi #{user.id} — Tam Redaktə</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium">Ad Soyad</label>
+              <Input value={form.name || ""} onChange={e => update("name", e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Email</label>
+              <Input type="email" value={form.email || ""} onChange={e => update("email", e.target.value)} className="mt-1" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-sm font-medium">Telefon</label>
+              <Input value={form.phone || ""} onChange={e => update("phone", e.target.value)} className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Lokasiya</label>
+              <Input value={form.location || ""} onChange={e => update("location", e.target.value)} className="mt-1" />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium">Bio</label>
+            <Textarea value={form.bio || ""} onChange={e => update("bio", e.target.value)} className="mt-1" rows={2} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="text-sm font-medium">Rol</label>
+              <Select value={form.role || "İstifadəçi"} onValueChange={v => update("role", v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="İstifadəçi">İstifadəçi</SelectItem>
+                  <SelectItem value="Moderator">Moderator</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Status</label>
+              <Select value={form.status || "aktiv"} onValueChange={v => update("status", v)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="aktiv">Aktiv</SelectItem>
+                  <SelectItem value="bloklanmis">Bloklanmış</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Təsdiqlənmiş</label>
+              <Select value={form.verified ? "yes" : "no"} onValueChange={v => update("verified", v === "yes")}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">Bəli ✓</SelectItem>
+                  <SelectItem value="no">Xeyr</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2 pt-2 border-t border-border">
+            <Button className="flex-1 bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => {
+              onSave(form as UserData);
+              toast({ title: "✅ İstifadəçi yeniləndi", description: `#${user.id} bütün məlumatları yeniləndi` });
+            }}>
+              <Save size={14} className="mr-1" /> Yadda saxla
+            </Button>
+            <Button variant="outline" onClick={onClose}>Ləğv</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
-  user: User | null;
+  user: UserData | null;
   open: boolean;
   onClose: () => void;
   onBlock: (id: number) => void;
   onUnblock: (id: number) => void;
-  onEdit: (id: number) => void;
+  onEdit: (user: UserData) => void;
 }) {
   const [tab, setTab] = useState(0);
   const [msgMode, setMsgMode] = useState(false);
@@ -109,11 +206,8 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
         </DialogHeader>
 
         <div className="space-y-5">
-          {/* Profile header */}
           <div className="flex gap-4 items-start">
-            <div className="w-16 h-16 rounded-full bg-admin-accent flex items-center justify-center text-xl font-bold text-accent-foreground shrink-0">
-              {user.name[0]}
-            </div>
+            <div className="w-16 h-16 rounded-full bg-admin-accent flex items-center justify-center text-xl font-bold text-accent-foreground shrink-0">{user.name[0]}</div>
             <div className="flex-1 min-w-0">
               <h3 className="text-lg font-semibold">{user.name}</h3>
               {user.bio && <p className="text-sm text-muted-foreground">{user.bio}</p>}
@@ -127,7 +221,6 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
             </div>
           </div>
 
-          {/* Stats */}
           <div className="grid grid-cols-4 gap-3">
             {[
               { label: "Elanlar", value: user.ads, icon: FileText, color: "text-admin-info" },
@@ -143,17 +236,9 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
             ))}
           </div>
 
-          {/* Tabs */}
           <div className="flex gap-1 border-b border-border">
             {profileTabs.map((t, i) => (
-              <button
-                key={t}
-                onClick={() => setTab(i)}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors",
-                  tab === i ? "border-admin-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
+              <button key={t} onClick={() => setTab(i)} className={cn("px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors", tab === i ? "border-admin-accent text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}>
                 {t}
                 {i === 1 && <span className="ml-1 text-[10px] bg-muted px-1.5 py-0.5 rounded-full">{user.userAds.length}</span>}
                 {i === 2 && <span className="ml-1 text-[10px] bg-muted px-1.5 py-0.5 rounded-full">{user.payments.length}</span>}
@@ -161,9 +246,7 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
             ))}
           </div>
 
-          {/* Tab content */}
           <div className="min-h-[200px]">
-            {/* Ümumi */}
             {tab === 0 && (
               <div className="grid grid-cols-2 gap-4 animate-fade-in">
                 <div className="space-y-3">
@@ -175,7 +258,7 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
                     { label: "Lokasiya", value: user.location },
                     { label: "Qeydiyyat tarixi", value: user.date },
                     { label: "Son aktivlik", value: user.lastActive },
-                  ].map((f) => (
+                  ].map(f => (
                     <div key={f.label} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{f.label}:</span>
                       <span className="font-medium">{f.value}</span>
@@ -186,12 +269,11 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase">Statistika</h4>
                   {[
                     { label: "Ümumi elanlar", value: user.ads },
-                    { label: "Aktiv elanlar", value: user.userAds.filter((a) => a.status === "aktiv").length },
-                    { label: "Gözləmədə", value: user.userAds.filter((a) => a.status === "gozlemede").length },
-                    { label: "Rədd edilmiş", value: user.userAds.filter((a) => a.status === "redd").length },
+                    { label: "Aktiv elanlar", value: user.userAds.filter(a => a.status === "aktiv").length },
+                    { label: "Gözləmədə", value: user.userAds.filter(a => a.status === "gozlemede").length },
                     { label: "Ümumi xərc", value: `${user.totalSpent} ₼` },
                     { label: "Ödəniş sayı", value: user.payments.length },
-                  ].map((f) => (
+                  ].map(f => (
                     <div key={f.label} className="flex justify-between text-sm">
                       <span className="text-muted-foreground">{f.label}:</span>
                       <span className="font-medium">{String(f.value)}</span>
@@ -200,31 +282,15 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
                 </div>
               </div>
             )}
-
-            {/* Elanlar */}
             {tab === 1 && (
               <div className="animate-fade-in">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-left">
-                      <th className="pb-2 font-medium">ID</th>
-                      <th className="pb-2 font-medium">Başlıq</th>
-                      <th className="pb-2 font-medium">Qiymət</th>
-                      <th className="pb-2 font-medium">Baxış</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Tarix</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="border-b border-border text-muted-foreground text-left"><th className="pb-2 font-medium">ID</th><th className="pb-2 font-medium">Başlıq</th><th className="pb-2 font-medium">Qiymət</th><th className="pb-2 font-medium">Baxış</th><th className="pb-2 font-medium">Status</th><th className="pb-2 font-medium">Tarix</th></tr></thead>
                   <tbody>
-                    {user.userAds.map((ad) => (
+                    {user.userAds.map(ad => (
                       <tr key={ad.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="py-2.5 text-muted-foreground">#{ad.id}</td>
-                        <td className="py-2.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 bg-muted rounded shrink-0" />
-                            <span className="font-medium text-xs">{ad.title}</span>
-                          </div>
-                        </td>
+                        <td className="py-2.5"><div className="flex items-center gap-2"><div className="w-7 h-7 bg-muted rounded shrink-0" /><span className="font-medium text-xs">{ad.title}</span></div></td>
                         <td className="py-2.5 font-medium tabular-nums text-xs">{ad.price.toLocaleString()} ₼</td>
                         <td className="py-2.5 text-muted-foreground tabular-nums text-xs">{ad.views.toLocaleString()}</td>
                         <td className="py-2.5"><StatusBadge status={ad.status} /></td>
@@ -235,27 +301,13 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
                 </table>
               </div>
             )}
-
-            {/* Ödənişlər */}
             {tab === 2 && (
               <div className="animate-fade-in">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs text-muted-foreground">
-                    Ümumi xərc: <span className="font-semibold text-foreground">{user.totalSpent} ₼</span>
-                  </p>
-                </div>
+                <div className="flex items-center justify-between mb-3"><p className="text-xs text-muted-foreground">Ümumi xərc: <span className="font-semibold text-foreground">{user.totalSpent} ₼</span></p></div>
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-left">
-                      <th className="pb-2 font-medium">ID</th>
-                      <th className="pb-2 font-medium">Xidmət</th>
-                      <th className="pb-2 font-medium">Məbləğ</th>
-                      <th className="pb-2 font-medium">Status</th>
-                      <th className="pb-2 font-medium">Tarix</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="border-b border-border text-muted-foreground text-left"><th className="pb-2 font-medium">ID</th><th className="pb-2 font-medium">Xidmət</th><th className="pb-2 font-medium">Məbləğ</th><th className="pb-2 font-medium">Status</th><th className="pb-2 font-medium">Tarix</th></tr></thead>
                   <tbody>
-                    {user.payments.map((p) => (
+                    {user.payments.map(p => (
                       <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                         <td className="py-2.5 text-muted-foreground">#{p.id}</td>
                         <td className="py-2.5 font-medium">{p.service}</td>
@@ -268,17 +320,12 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
                 </table>
               </div>
             )}
-
-            {/* Aktivlik */}
             {tab === 3 && (
               <div className="space-y-0 animate-fade-in">
                 {user.activity.map((a, i) => (
                   <div key={i} className="flex gap-3 py-2.5 border-b border-border/50 last:border-0">
                     <div className="w-1.5 h-1.5 rounded-full bg-admin-accent mt-2 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{a.action}</p>
-                      <p className="text-xs text-muted-foreground">{a.detail}</p>
-                    </div>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{a.action}</p><p className="text-xs text-muted-foreground">{a.detail}</p></div>
                     <span className="text-[10px] text-muted-foreground whitespace-nowrap font-mono">{a.date}</span>
                   </div>
                 ))}
@@ -286,36 +333,24 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
             )}
           </div>
 
-          {/* Message box */}
           {msgMode && (
             <div className="space-y-2 animate-fade-in border-t border-border pt-3">
               <h4 className="text-sm font-medium">Mesaj göndər — {user.name}</h4>
-              <Textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Mesajınızı yazın..." rows={3} />
+              <Textarea value={msg} onChange={e => setMsg(e.target.value)} placeholder="Mesajınızı yazın..." rows={3} />
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSendMsg} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90">
-                  <Send size={14} className="mr-1" /> Göndər
-                </Button>
+                <Button size="sm" onClick={handleSendMsg} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90"><Send size={14} className="mr-1" /> Göndər</Button>
                 <Button size="sm" variant="outline" onClick={() => { setMsgMode(false); setMsg(""); }}>Ləğv</Button>
               </div>
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 pt-2 border-t border-border">
-            {!msgMode && (
-              <Button size="sm" variant="outline" onClick={() => setMsgMode(true)}>
-                <Mail size={14} className="mr-1" /> Mesaj göndər
-              </Button>
-            )}
-            <Button size="sm" variant="outline" onClick={() => onEdit(user.id)}><Edit size={14} className="mr-1" /> Redaktə</Button>
+            {!msgMode && <Button size="sm" variant="outline" onClick={() => setMsgMode(true)}><Mail size={14} className="mr-1" /> Mesaj göndər</Button>}
+            <Button size="sm" variant="outline" onClick={() => { onClose(); onEdit(user); }}><Edit size={14} className="mr-1" /> Tam Redaktə</Button>
             {user.status === "aktiv" ? (
-              <Button size="sm" variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => onBlock(user.id)}>
-                <Ban size={14} className="mr-1" /> Blokla
-              </Button>
+              <Button size="sm" variant="outline" className="text-admin-danger border-admin-danger/30 hover:bg-admin-danger/5" onClick={() => onBlock(user.id)}><Ban size={14} className="mr-1" /> Blokla</Button>
             ) : (
-              <Button size="sm" variant="outline" className="text-admin-success border-admin-success/30 hover:bg-admin-success/5" onClick={() => onUnblock(user.id)}>
-                <Shield size={14} className="mr-1" /> Bloku aç
-              </Button>
+              <Button size="sm" variant="outline" className="text-admin-success border-admin-success/30 hover:bg-admin-success/5" onClick={() => onUnblock(user.id)}><Shield size={14} className="mr-1" /> Bloku aç</Button>
             )}
           </div>
         </div>
@@ -326,12 +361,13 @@ function UserDetailDialog({ user, open, onClose, onBlock, onUnblock, onEdit }: {
 
 export default function IstifadecilerPage() {
   const [users, setUsers] = useState(mockUsers);
-  const [detailUser, setDetailUser] = useState<User | null>(null);
+  const [detailUser, setDetailUser] = useState<UserData | null>(null);
+  const [editUser, setEditUser] = useState<UserData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [editUserId, setEditUserId] = useState<number | null>(null);
-  const [editRole, setEditRole] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const perPage = 10;
 
   const filtered = users.filter((u) => {
     if (roleFilter !== "all") {
@@ -346,42 +382,36 @@ export default function IstifadecilerPage() {
     return true;
   });
 
+  const pageCount = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+
   const handleBlock = (id: number) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "bloklanmis" as const } : u));
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: "bloklanmis" as const } : u));
     setDetailUser(null);
     toast({ title: "🚫 İstifadəçi bloklandı", description: `İstifadəçi #${id} bloklandı` });
   };
 
   const handleUnblock = (id: number) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, status: "aktiv" as const } : u));
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: "aktiv" as const } : u));
     setDetailUser(null);
     toast({ title: "✅ Blok açıldı", description: `İstifadəçi #${id} aktivləşdirildi` });
   };
 
-  const handleEditUser = (userId: number) => {
-    setEditUserId(userId);
-    const user = users.find(u => u.id === userId);
-    if (user) setEditRole(user.role);
-  };
-
-  const handleSaveEdit = () => {
-    if (editUserId === null) return;
-    setUsers(prev => prev.map(u => u.id === editUserId ? { ...u, role: editRole as User["role"] } : u));
-    toast({ title: "✅ İstifadəçi yeniləndi", description: `#${editUserId} rolu "${editRole}" olaraq dəyişdirildi` });
-    setEditUserId(null);
+  const handleSaveEdit = (updatedUser: UserData) => {
+    setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+    setEditUser(null);
     setDetailUser(null);
   };
 
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Ümumi", value: users.length, color: "text-admin-info" },
-          { label: "Aktiv", value: users.filter((u) => u.status === "aktiv").length, color: "text-admin-success" },
-          { label: "Bloklanmış", value: users.filter((u) => u.status === "bloklanmis").length, color: "text-admin-danger" },
-          { label: "Admin/Mod", value: users.filter((u) => u.role !== "İstifadəçi").length, color: "text-admin-accent" },
-        ].map((s) => (
+          { label: "Aktiv", value: users.filter(u => u.status === "aktiv").length, color: "text-admin-success" },
+          { label: "Bloklanmış", value: users.filter(u => u.status === "bloklanmis").length, color: "text-admin-danger" },
+          { label: "Admin/Mod", value: users.filter(u => u.role !== "İstifadəçi").length, color: "text-admin-accent" },
+        ].map(s => (
           <div key={s.label} className="bg-card rounded-lg border border-border p-3 text-center">
             <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
             <p className="text-xs text-muted-foreground">{s.label}</p>
@@ -389,15 +419,9 @@ export default function IstifadecilerPage() {
         ))}
       </div>
 
-      {/* Filters */}
       <div className="bg-card rounded-lg border border-border p-4 flex flex-wrap gap-3 items-end">
-        <Input
-          placeholder="Ad və ya email axtar..."
-          className="h-9 flex-1 min-w-[200px]"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
+        <Input placeholder="Ad və ya email axtar..." className="h-9 flex-1 min-w-[200px]" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        <Select value={roleFilter} onValueChange={v => { setRoleFilter(v); setCurrentPage(1); }}>
           <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Rol" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Hamısı</SelectItem>
@@ -406,7 +430,7 @@ export default function IstifadecilerPage() {
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={v => { setStatusFilter(v); setCurrentPage(1); }}>
           <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Hamısı</SelectItem>
@@ -414,7 +438,6 @@ export default function IstifadecilerPage() {
             <SelectItem value="blok">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        <Button size="sm" className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90"><Search size={14} className="mr-1" /> Axtar</Button>
         {(roleFilter !== "all" || statusFilter !== "all" || searchQuery) && (
           <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setRoleFilter("all"); setStatusFilter("all"); setSearchQuery(""); }}>
             <X size={12} className="mr-1" /> Sıfırla
@@ -424,12 +447,10 @@ export default function IstifadecilerPage() {
 
       <div className="text-xs text-muted-foreground">{filtered.length} nəticə</div>
 
-      {/* Table */}
       <div className="bg-card rounded-lg border border-border overflow-x-auto">
         <table className="min-w-[850px] w-full text-sm">
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30">
-              <th className="p-3 w-8"><input type="checkbox" className="rounded" /></th>
               <th className="p-3 font-medium w-[50px]">ID</th>
               <th className="p-3 font-medium">Ad</th>
               <th className="p-3 font-medium">Email</th>
@@ -438,17 +459,12 @@ export default function IstifadecilerPage() {
               <th className="p-3 font-medium w-[85px]">Qeydiyyat</th>
               <th className="p-3 font-medium w-[75px]">Rol</th>
               <th className="p-3 font-medium w-[70px]">Status</th>
-              <th className="p-3 font-medium w-[110px]">Əməliyyat</th>
+              <th className="p-3 font-medium w-[120px]">Əməliyyat</th>
             </tr>
           </thead>
           <tbody>
-            {filtered.map((u) => (
-              <tr
-                key={u.id}
-                className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
-                onClick={() => setDetailUser(u)}
-              >
-                <td className="p-3" onClick={(e) => e.stopPropagation()}><input type="checkbox" className="rounded" /></td>
+            {paginated.map(u => (
+              <tr key={u.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors cursor-pointer" onClick={() => setDetailUser(u)}>
                 <td className="p-3 text-muted-foreground text-xs">#{u.id}</td>
                 <td className="p-3 font-medium">
                   <div className="flex items-center gap-2">
@@ -465,14 +481,11 @@ export default function IstifadecilerPage() {
                 <td className="p-3 text-muted-foreground text-[11px]">{u.date}</td>
                 <td className="p-3"><span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${roleColor[u.role]}`}>{u.role}</span></td>
                 <td className="p-3"><StatusBadge status={u.status} /></td>
-                <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                <td className="p-3" onClick={e => e.stopPropagation()}>
                   <div className="flex gap-0.5">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailUser(u)}><Eye size={12} /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditUser(u.id)}><Edit size={12} /></Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}>
-                      <Ban size={12} />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setDetailUser(u); }}><Mail size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditUser(u)}><Edit size={12} /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-admin-danger" onClick={() => u.status === "aktiv" ? handleBlock(u.id) : handleUnblock(u.id)}><Ban size={12} /></Button>
                   </div>
                 </td>
               </tr>
@@ -481,33 +494,20 @@ export default function IstifadecilerPage() {
         </table>
       </div>
 
-      {/* Detail Dialog */}
-      {/* Edit Role Dialog */}
-      <Dialog open={editUserId !== null} onOpenChange={() => setEditUserId(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>İstifadəçi rolunu dəyiş</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <Select value={editRole} onValueChange={setEditRole}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="İstifadəçi">İstifadəçi</SelectItem>
-                <SelectItem value="Moderator">Moderator</SelectItem>
-                <SelectItem value="Admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button className="w-full bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={handleSaveEdit}>Yadda saxla</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Pagination */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <span className="text-xs">{filtered.length} istifadəçi</span>
+        <div className="flex gap-1 items-center">
+          <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}><ChevronLeft size={14} /></Button>
+          {Array.from({ length: Math.min(pageCount, 5) }, (_, i) => i + 1).map(p => (
+            <Button key={p} variant={p === currentPage ? "default" : "outline"} size="sm" className="h-8 w-8" onClick={() => setCurrentPage(p)}>{p}</Button>
+          ))}
+          <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(p => p + 1)}><ChevronRight size={14} /></Button>
+        </div>
+      </div>
 
-      <UserDetailDialog
-        user={detailUser}
-        open={!!detailUser}
-        onClose={() => setDetailUser(null)}
-        onBlock={handleBlock}
-        onUnblock={handleUnblock}
-        onEdit={handleEditUser}
-      />
+      <UserDetailDialog user={detailUser} open={!!detailUser} onClose={() => setDetailUser(null)} onBlock={handleBlock} onUnblock={handleUnblock} onEdit={(u) => { setDetailUser(null); setEditUser(u); }} />
+      <UserEditDialog user={editUser} open={!!editUser} onClose={() => setEditUser(null)} onSave={handleSaveEdit} />
     </div>
   );
 }

@@ -931,7 +931,16 @@ export default function ElanlarPage() {
                   ) : <span className="text-[10px] text-muted-foreground">—</span>}
                 </td>
                 <td className="px-2 py-2 text-muted-foreground tabular-nums text-[11px]">{ad.views > 999 ? `${(ad.views/1000).toFixed(0)}K` : ad.views}</td>
-                <td className="px-2 py-2"><StatusBadge status={ad.status} /></td>
+                <td className="px-2 py-2">
+                  <div className="flex items-center gap-1">
+                    <StatusBadge status={ad.status} />
+                    {ad.aiCheck && (
+                      <span className={cn("text-[8px] font-bold px-1 rounded", ad.aiCheck.score >= 70 ? "bg-admin-success/10 text-admin-success" : ad.aiCheck.score >= 40 ? "bg-admin-warning/10 text-admin-warning" : "bg-admin-danger/10 text-admin-danger")}>
+                        {ad.aiCheck.score}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-2 py-2 text-muted-foreground text-[10px] whitespace-nowrap">{ad.date}</td>
                 <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                   <div className="flex gap-px">

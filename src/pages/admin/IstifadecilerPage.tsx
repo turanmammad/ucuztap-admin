@@ -651,6 +651,87 @@ export default function IstifadecilerPage() {
         ))}
       </div>
 
+      {/* AI Scan Button & Progress */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <Button size="sm" onClick={handleAiScan} disabled={aiScanning}
+          className={cn("h-9 text-xs", aiScanDone ? "bg-card border border-border text-foreground hover:bg-muted" : "bg-admin-accent text-accent-foreground hover:bg-admin-accent/90")}>
+          {aiScanning ? <><RefreshCw size={13} className="mr-1.5 animate-spin" /> AI analiz edir...</> : <><Bot size={13} className="mr-1.5" /> {aiScanDone ? "Yenidən skan et" : "🤖 AI Risk Analizi"}</>}
+        </Button>
+        {aiScanDone && (
+          <Button size="sm" variant="outline" className="h-9 text-xs" onClick={() => setShowRiskPanel(!showRiskPanel)}>
+            <AlertTriangle size={13} className="mr-1.5 text-admin-danger" />
+            {showRiskPanel ? "Risk panelini gizlə" : `Riskli istifadəçilər (${riskyUsers.length})`}
+          </Button>
+        )}
+        {aiScanning && (
+          <div className="flex-1 min-w-[200px]">
+            <Progress value={Math.min(100, scanProgress)} className="h-1.5" />
+            <p className="text-[10px] text-muted-foreground mt-0.5">{Math.min(100, Math.round(scanProgress))}% — İstifadəçilər analiz edilir...</p>
+          </div>
+        )}
+      </div>
+
+      {/* Risk Panel */}
+      {showRiskPanel && riskyUsers.length > 0 && (
+        <div className="bg-card rounded-lg border border-admin-danger/20 overflow-hidden animate-fade-in">
+          <div className="bg-admin-danger/5 border-b border-admin-danger/10 px-4 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={14} className="text-admin-danger" />
+              <span className="text-sm font-semibold">Riskli İstifadəçilər — AI Sıralaması</span>
+              <span className="text-[10px] bg-admin-danger/10 text-admin-danger px-1.5 py-0.5 rounded font-medium">{riskyUsers.length} nəfər</span>
+            </div>
+            <Button size="sm" variant="ghost" className="h-6 text-[10px]" onClick={() => setShowRiskPanel(false)}><X size={12} /></Button>
+          </div>
+          <div className="divide-y divide-border">
+            {riskyUsers.map((u, idx) => {
+              const risk = u.riskProfile!;
+              const rl = riskLevelConfig[risk.riskLevel];
+              return (
+                <div key={u.id} className={cn("px-4 py-3 hover:bg-muted/20 transition-colors cursor-pointer flex items-start gap-3",
+                  risk.riskLevel === "kritik" && "bg-admin-danger/[0.02]"
+                )} onClick={() => setDetailUser(u)}>
+                  <div className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold shrink-0">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium">{u.name}</span>
+                      <span className="text-[10px] text-muted-foreground">#{u.id}</span>
+                      <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-semibold", rl.bgClass)}>
+                        {rl.label} — {risk.riskScore}/100
+                      </span>
+                      {u.status === "bloklanmis" && <span className="text-[9px] bg-admin-danger/10 text-admin-danger px-1.5 py-0.5 rounded">Bloklanmış</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {risk.flags.slice(0, 4).map((f, i) => (
+                        <span key={i} className="text-[9px] bg-muted rounded px-1.5 py-0.5 flex items-center gap-1">
+                          <span className={cn("w-1 h-1 rounded-full",
+                            f.severity === "high" ? "bg-admin-danger" : f.severity === "medium" ? "bg-admin-warning" : "bg-muted-foreground"
+                          )} />
+                          {riskFlagConfig[f.type].label}
+                        </span>
+                      ))}
+                      {risk.flags.length > 4 && <span className="text-[9px] text-muted-foreground">+{risk.flags.length - 4} daha</span>}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">{risk.recommendation}</p>
+                  </div>
+                  <div className="shrink-0 flex flex-col items-center gap-1">
+                    <div className={cn("text-lg font-bold", rl.class)}>{risk.riskScore}</div>
+                    <span className="text-[9px] text-muted-foreground">{u.ads} elan</span>
+                    {u.status === "aktiv" && risk.riskLevel !== "aşağı" && (
+                      <Button size="sm" variant="outline" className="h-6 text-[9px] text-admin-danger border-admin-danger/30 px-2 mt-1"
+                        onClick={e => { e.stopPropagation(); handleBlock(u.id); }}>
+                        <Ban size={9} className="mr-0.5" /> Blokla
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="bg-card rounded-lg border border-border p-4 flex flex-wrap gap-3 items-end">
         <Input placeholder="Ad və ya email axtar..." className="h-9 flex-1 min-w-[200px]" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         <Select value={roleFilter} onValueChange={v => { setRoleFilter(v); setCurrentPage(1); }}>

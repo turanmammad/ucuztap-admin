@@ -11,7 +11,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   Monitor, Smartphone, Layout, Image, Sparkles, DollarSign, Eye, MousePointer,
   Plus, Edit, Trash2, ToggleLeft, Copy, BarChart3, Clock, ExternalLink, Wand2,
-  Upload, ChevronRight, TrendingUp,
+  Upload, ChevronRight, TrendingUp, Check, X, FileText, CreditCard, CalendarDays,
+  AlertTriangle, Send, User,
 } from "lucide-react";
 
 // === TYPES ===

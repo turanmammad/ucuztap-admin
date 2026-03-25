@@ -805,7 +805,16 @@ export default function IstifadecilerPage() {
                 <td className="p-3 tabular-nums text-xs">{u.ads}</td>
                 <td className="p-3 text-muted-foreground text-[11px]">{u.date}</td>
                 <td className="p-3"><span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${roleColor[u.role]}`}>{u.role}</span></td>
-                <td className="p-3"><StatusBadge status={u.status} /></td>
+                <td className="p-3">
+                  <div className="flex items-center gap-1">
+                    <StatusBadge status={u.status} />
+                    {u.riskProfile && u.riskProfile.riskScore >= 25 && (
+                      <span className={cn("text-[8px] px-1 py-0.5 rounded font-bold", riskLevelConfig[u.riskProfile.riskLevel].bgClass)}>
+                        {u.riskProfile.riskScore}
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="p-3" onClick={e => e.stopPropagation()}>
                   <div className="flex gap-0.5">
                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDetailUser(u)}><Eye size={12} /></Button>

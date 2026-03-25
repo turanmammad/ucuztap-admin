@@ -357,6 +357,7 @@ export default function MagazalarPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editShop, setEditShop] = useState<Shop | null>(null);
   const [planFilter, setPlanFilter] = useState("all");
+  const [upgradeShop, setUpgradeShop] = useState<Shop | null>(null);
 
   const filtered = shops.filter((s) => {
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
@@ -592,6 +593,19 @@ export default function MagazalarPage() {
         onReject={handleReject}
         onBlock={handleBlock}
         onEdit={openEdit}
+        onUpgrade={(shop) => { setDetailShop(null); setUpgradeShop(shop); }}
+      />
+
+      {/* Plan Upgrade Dialog */}
+      <PlanUpgradeDialog
+        shop={upgradeShop}
+        open={!!upgradeShop}
+        onClose={() => setUpgradeShop(null)}
+        onUpgrade={(id, plan) => {
+          setShops((prev) => prev.map((s) => s.id === id ? { ...s, plan } : s));
+          toast({ title: "🎉 Paket yüksəldildi", description: `Mağaza #${id} ${plan} planına yüksəldildi` });
+          setUpgradeShop(null);
+        }}
       />
 
       {/* Create Dialog */}

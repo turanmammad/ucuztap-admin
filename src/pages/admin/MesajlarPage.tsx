@@ -168,8 +168,18 @@ export default function MesajlarPage() {
             <SelectItem value="blocked">Bloklanmış</SelectItem>
           </SelectContent>
         </Select>
-        {(statusFilter !== "all" || searchQuery) && (
-          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setStatusFilter("all"); setSearchQuery(""); }}>
+        <DateRangeFilter dateFrom={dateFrom} dateTo={dateTo} onDateFromChange={d => { setDateFrom(d); setCurrentPage(1); }} onDateToChange={d => { setDateTo(d); setCurrentPage(1); }} />
+        <ExcelExportButton onClick={() => exportToExcel(filtered, [
+          { key: "id", label: "ID" },
+          { key: "from", label: "Göndərən" },
+          { key: "fromEmail", label: "Göndərən Email" },
+          { key: "to", label: "Alan" },
+          { key: "subject", label: "Mövzu" },
+          { key: "status", label: "Status" },
+          { key: "date", label: "Tarix" },
+        ], "mesajlar")} />
+        {(statusFilter !== "all" || searchQuery || dateFrom || dateTo) && (
+          <Button size="sm" variant="ghost" className="text-xs" onClick={() => { setStatusFilter("all"); setSearchQuery(""); setDateFrom(undefined); setDateTo(undefined); }}>
             <X size={12} className="mr-1" /> Sıfırla
           </Button>
         )}
@@ -182,13 +192,13 @@ export default function MesajlarPage() {
         <table className="w-full text-sm" style={{ minWidth: 750 }}>
           <thead>
             <tr className="border-b border-border text-muted-foreground text-left bg-muted/30 text-xs">
-              <th className="p-3 font-medium">ID</th>
-              <th className="p-3 font-medium">Göndərən</th>
-              <th className="p-3 font-medium">Alan</th>
-              <th className="p-3 font-medium">Mövzu</th>
+              <SortableHeader label="ID" sortKey="id" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Göndərən" sortKey="from" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Alan" sortKey="to" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Mövzu" sortKey="subject" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">Elan</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium">Tarix</th>
+              <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+              <SortableHeader label="Tarix" sortKey="date" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
               <th className="p-3 font-medium">Əməliyyat</th>
             </tr>
           </thead>

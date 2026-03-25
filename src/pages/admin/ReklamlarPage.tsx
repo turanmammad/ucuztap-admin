@@ -11,7 +11,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   Monitor, Smartphone, Layout, Image, Sparkles, DollarSign, Eye, MousePointer,
   Plus, Edit, Trash2, ToggleLeft, Copy, BarChart3, Clock, ExternalLink, Wand2,
-  Upload, ChevronRight, TrendingUp,
+  Upload, ChevronRight, TrendingUp, Check, X, FileText, CreditCard, CalendarDays,
+  AlertTriangle, Send, User,
 } from "lucide-react";
 
 // === TYPES ===
@@ -47,6 +48,38 @@ interface Banner {
   aiGenerated: boolean;
 }
 
+// Duration config
+const durationOptions = [
+  { id: "1d", label: "1 gün", days: 1, multiplier: 1 },
+  { id: "3d", label: "3 gün", days: 3, multiplier: 3 },
+  { id: "1w", label: "1 həftə", days: 7, multiplier: 6 },
+  { id: "2w", label: "2 həftə", days: 14, multiplier: 12 },
+  { id: "1m", label: "1 ay", days: 30, multiplier: 20 },
+  { id: "3m", label: "3 ay", days: 90, multiplier: 51 },
+  { id: "6m", label: "6 ay", days: 180, multiplier: 90 },
+];
+
+interface AdRequest {
+  id: number;
+  advertiser: string;
+  company: string;
+  email: string;
+  phone: string;
+  slotId: string;
+  description: string;
+  targetUrl: string;
+  duration: string; // duration option id
+  durationDays: number;
+  totalPrice: number;
+  status: "yeni" | "təsdiqləndi" | "rədd" | "ödənilib" | "aktiv";
+  paymentStatus: "gözləyir" | "ödənilib" | "ləğv";
+  paymentMethod?: string;
+  paymentDate?: string;
+  createdAt: string;
+  note?: string;
+  imageUploaded: boolean;
+}
+
 // === MOCK DATA ===
 const bannerSlots: BannerSlot[] = [
   { id: "header-top", name: "Header Üst Banner", location: "Ana səhifə — header üstü", size: "728×90", width: 728, height: 90, device: "desktop", priceDaily: 25, priceWeekly: 150, priceMonthly: 500, active: true, currentBanner: null },
@@ -70,11 +103,34 @@ const mockBanners: Banner[] = [
   { id: 7, title: "ABB iç dizayn", advertiser: "ABB Group", slotId: "category-top", imageUrl: "", targetUrl: "https://abb-group.az", startDate: "2026-03-22", endDate: "2026-04-22", status: "pauzada", impressions: 45200, clicks: 620, ctr: 1.37, revenue: 250, aiGenerated: false },
 ];
 
+const mockRequests: AdRequest[] = [
+  { id: 501, advertiser: "Əhməd Hüseynov", company: "TechStore AZ", email: "ahmed@techstore.az", phone: "+994 50 444 55 66", slotId: "header-top", description: "Yeni iPhone 16 satışı üçün reklam banneri. Qara fonda ağ yazı ilə.", targetUrl: "https://techstore.az/iphone16", duration: "1m", durationDays: 30, totalPrice: 500, status: "yeni", paymentStatus: "gözləyir", createdAt: "2026-03-24 14:30", imageUploaded: true },
+  { id: 502, advertiser: "Nigar Əliyeva", company: "GlamBeauty", email: "nigar@glambeauty.az", phone: "+994 55 333 22 11", slotId: "sidebar-right", description: "Kosmetika mağazası üçün bahar kampaniyası. Çəhrayı tonlarda.", targetUrl: "https://glambeauty.az", duration: "2w", durationDays: 14, totalPrice: 240, status: "yeni", paymentStatus: "gözləyir", createdAt: "2026-03-24 10:15", imageUploaded: false },
+  { id: 503, advertiser: "Rəşad Məmmədov", company: "AutoPlus", email: "rashad@autoplus.az", phone: "+994 70 555 44 33", slotId: "listing-inline", description: "Avtomobil təmir xidmətləri reklamı.", targetUrl: "https://autoplus.az", duration: "1w", durationDays: 7, totalPrice: 180, status: "təsdiqləndi", paymentStatus: "gözləyir", createdAt: "2026-03-23 16:45", imageUploaded: true },
+  { id: 504, advertiser: "Kamran Nəsirov", company: "FoodDelivery", email: "kamran@fooddelivery.az", phone: "+994 50 777 88 99", slotId: "header-mobile", description: "Yemək çatdırılma xidməti, pulsuz çatdırılma kampaniyası.", targetUrl: "https://fooddelivery.az", duration: "3m", durationDays: 90, totalPrice: 765, status: "ödənilib", paymentStatus: "ödənilib", paymentMethod: "Bank köçürməsi", paymentDate: "2026-03-22", createdAt: "2026-03-20 09:00", imageUploaded: true },
+  { id: 505, advertiser: "Leyla Həsənova", company: "EduCenter", email: "leyla@educenter.az", phone: "+994 55 222 33 44", slotId: "detail-bottom", description: "İngilis dili kursları reklamı.", targetUrl: "https://educenter.az", duration: "1d", durationDays: 1, totalPrice: 18, status: "rədd", paymentStatus: "ləğv", note: "Banner keyfiyyəti aşağıdır, yeni dizayn tələb olunur.", createdAt: "2026-03-22 11:30", imageUploaded: true },
+  { id: 506, advertiser: "Orxan Babayev", company: "SportMax", email: "orxan@sportmax.az", phone: "+994 70 111 22 33", slotId: "sidebar-sticky", description: "İdman avadanlıqları, 40% endirim.", targetUrl: "https://sportmax.az", duration: "1m", durationDays: 30, totalPrice: 700, status: "aktiv", paymentStatus: "ödənilib", paymentMethod: "Kart", paymentDate: "2026-03-18", createdAt: "2026-03-17 13:20", imageUploaded: true },
+];
+
 const statusConfig: Record<string, { label: string; class: string }> = {
   aktiv: { label: "Aktiv", class: "bg-emerald-500/10 text-emerald-600" },
   gozlemede: { label: "Gözləmədə", class: "bg-amber-500/10 text-amber-600" },
   bitib: { label: "Bitib", class: "bg-gray-500/10 text-gray-500" },
   pauzada: { label: "Pauzada", class: "bg-blue-500/10 text-blue-600" },
+};
+
+const requestStatusConfig: Record<string, { label: string; class: string }> = {
+  yeni: { label: "Yeni sorğu", class: "bg-amber-500/10 text-amber-600" },
+  "təsdiqləndi": { label: "Təsdiqləndi", class: "bg-blue-500/10 text-blue-600" },
+  "rədd": { label: "Rədd edildi", class: "bg-red-500/10 text-red-600" },
+  "ödənilib": { label: "Ödənilib", class: "bg-emerald-500/10 text-emerald-600" },
+  aktiv: { label: "Aktiv", class: "bg-emerald-500/10 text-emerald-600" },
+};
+
+const paymentStatusConfig: Record<string, { label: string; class: string; icon: typeof CreditCard }> = {
+  "gözləyir": { label: "Gözləyir", class: "bg-amber-500/10 text-amber-600", icon: Clock },
+  "ödənilib": { label: "Ödənilib", class: "bg-emerald-500/10 text-emerald-600", icon: Check },
+  "ləğv": { label: "Ləğv", class: "bg-red-500/10 text-red-600", icon: X },
 };
 
 const deviceIcon = { all: Monitor, desktop: Monitor, mobile: Smartphone };
@@ -144,8 +200,20 @@ function BannerFormDialog({ banner, slots, open, onClose, onSave }: {
   const [advertiser, setAdvertiser] = useState(banner?.advertiser || "");
   const [slotId, setSlotId] = useState(banner?.slotId || slots[0]?.id || "");
   const [targetUrl, setTargetUrl] = useState(banner?.targetUrl || "");
-  const [startDate, setStartDate] = useState(banner?.startDate || "");
-  const [endDate, setEndDate] = useState(banner?.endDate || "");
+  const [duration, setDuration] = useState("1m");
+  const [startDate, setStartDate] = useState(banner?.startDate || new Date().toISOString().split("T")[0]);
+
+  const selectedSlot = slots.find(s => s.id === slotId);
+  const selectedDuration = durationOptions.find(d => d.id === duration);
+  const totalPrice = selectedSlot && selectedDuration ? selectedSlot.priceDaily * selectedDuration.multiplier : 0;
+
+  // Auto-calculate end date
+  const endDate = (() => {
+    if (!startDate || !selectedDuration) return "";
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + selectedDuration.days);
+    return d.toISOString().split("T")[0];
+  })();
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -165,10 +233,41 @@ function BannerFormDialog({ banner, slots, open, onClose, onSave }: {
             </Select>
           </div>
           <div><label className="text-sm font-medium">Hədəf URL</label><Input value={targetUrl} onChange={e => setTargetUrl(e.target.value)} className="mt-1" placeholder="https://..." /></div>
+
+          {/* Duration selection */}
+          <div>
+            <label className="text-sm font-medium">Müddət</label>
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 mt-1">
+              {durationOptions.map(d => (
+                <button key={d.id} onClick={() => setDuration(d.id)}
+                  className={cn(
+                    "px-2 py-1.5 rounded-md border text-xs font-medium transition-all text-center",
+                    duration === d.id ? "border-admin-accent bg-admin-accent/10 text-admin-accent" : "border-border text-muted-foreground hover:border-admin-accent/40"
+                  )}>
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div><label className="text-sm font-medium">Başlama</label><Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1" /></div>
-            <div><label className="text-sm font-medium">Bitmə</label><Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1" /></div>
+            <div>
+              <label className="text-sm font-medium">Bitmə</label>
+              <Input type="date" value={endDate} readOnly className="mt-1 bg-muted/30" />
+            </div>
           </div>
+
+          {/* Price summary */}
+          {selectedSlot && selectedDuration && (
+            <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg p-3 flex items-center justify-between">
+              <div className="text-xs space-y-0.5">
+                <p className="text-muted-foreground">{selectedSlot.name} • {selectedDuration.label}</p>
+                <p className="text-muted-foreground">Günlük: {selectedSlot.priceDaily} ₼ × {selectedDuration.multiplier}</p>
+              </div>
+              <p className="text-lg font-bold text-admin-accent">{totalPrice} ₼</p>
+            </div>
+          )}
 
           {/* Image upload placeholder */}
           <div>
@@ -177,7 +276,7 @@ function BannerFormDialog({ banner, slots, open, onClose, onSave }: {
               <Upload size={24} className="mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Şəkil yükləyin və ya sürükləyin</p>
               <p className="text-[10px] text-muted-foreground mt-1">
-                {slots.find(s => s.id === slotId)?.size || "728×90"} • PNG, JPG, GIF, WebP • Max 2MB
+                {selectedSlot?.size || "728×90"} • PNG, JPG, GIF, WebP • Max 2MB
               </p>
             </div>
           </div>
@@ -503,15 +602,194 @@ function AiBannerDialog({ slots, open, onClose, onGenerate }: {
   );
 }
 
+// === REQUEST DETAIL DIALOG ===
+function RequestDetailDialog({ request, slots, open, onClose, onApprove, onReject, onConfirmPayment }: {
+  request: AdRequest | null; slots: BannerSlot[]; open: boolean; onClose: () => void;
+  onApprove: (id: number) => void; onReject: (id: number, reason: string) => void;
+  onConfirmPayment: (id: number, method: string) => void;
+}) {
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Kart");
+
+  if (!request) return null;
+
+  const slot = slots.find(s => s.id === request.slotId);
+  const dur = durationOptions.find(d => d.id === request.duration);
+  const reqStatus = requestStatusConfig[request.status];
+  const payStatus = paymentStatusConfig[request.paymentStatus];
+  const PayIcon = payStatus.icon;
+
+  return (
+    <Dialog open={open} onOpenChange={() => { onClose(); setRejectMode(false); setRejectReason(""); }}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
+            <FileText size={18} className="text-admin-accent" />
+            Reklam Sorğusu #{request.id}
+            <span className={cn("text-[10px] px-2 py-0.5 rounded font-medium", reqStatus.class)}>{reqStatus.label}</span>
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          {/* Advertiser info */}
+          <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1"><User size={12} /> Reklamçı</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div><span className="text-muted-foreground text-xs">Ad:</span><p className="font-medium">{request.advertiser}</p></div>
+              <div><span className="text-muted-foreground text-xs">Şirkət:</span><p className="font-medium">{request.company}</p></div>
+              <div><span className="text-muted-foreground text-xs">Email:</span><p className="text-xs">{request.email}</p></div>
+              <div><span className="text-muted-foreground text-xs">Telefon:</span><p className="text-xs font-mono">{request.phone}</p></div>
+            </div>
+          </div>
+
+          {/* Banner details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Banner Yeri</h4>
+                <p className="text-sm font-medium mt-0.5">{slot?.name || request.slotId}</p>
+                <p className="text-[10px] text-muted-foreground">{slot?.location} • {slot?.size}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Hədəf URL</h4>
+                <a href={request.targetUrl} target="_blank" rel="noreferrer" className="text-xs text-admin-accent hover:underline flex items-center gap-1">
+                  {request.targetUrl} <ExternalLink size={10} />
+                </a>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Təsvir</h4>
+                <p className="text-sm mt-0.5 bg-muted/20 rounded p-2">{request.description}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Banner şəkli</h4>
+                <span className={cn("text-xs", request.imageUploaded ? "text-admin-success" : "text-admin-warning")}>
+                  {request.imageUploaded ? "✓ Yüklənib" : "✗ Yüklənməyib"}
+                </span>
+              </div>
+              <div>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase">Sorğu tarixi</h4>
+                <p className="text-xs text-muted-foreground">{request.createdAt}</p>
+              </div>
+            </div>
+
+            {/* Duration & Payment */}
+            <div className="space-y-3">
+              <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg p-3 space-y-2">
+                <h4 className="text-xs font-semibold flex items-center gap-1"><CalendarDays size={12} className="text-admin-accent" /> Müddət & Qiymət</h4>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{dur?.label || request.duration}</span>
+                  <span className="text-sm text-muted-foreground">({request.durationDays} gün)</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-border">
+                  <span className="text-xs text-muted-foreground">Günlük tarif:</span>
+                  <span className="text-xs font-medium">{slot?.priceDaily || "—"} ₼</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Ümumi:</span>
+                  <span className="text-lg font-bold text-admin-accent">{request.totalPrice} ₼</span>
+                </div>
+              </div>
+
+              <div className={cn("rounded-lg border p-3 space-y-2", payStatus.class.replace("/10", "/5").replace("text-", "border-").split(" ")[0] + "/20")}>
+                <h4 className="text-xs font-semibold flex items-center gap-1"><CreditCard size={12} /> Ödəniş</h4>
+                <div className="flex items-center gap-2">
+                  <PayIcon size={14} />
+                  <span className={cn("text-sm font-medium px-2 py-0.5 rounded", payStatus.class)}>{payStatus.label}</span>
+                </div>
+                {request.paymentMethod && (
+                  <p className="text-xs text-muted-foreground">Metod: {request.paymentMethod}</p>
+                )}
+                {request.paymentDate && (
+                  <p className="text-xs text-muted-foreground">Tarix: {request.paymentDate}</p>
+                )}
+              </div>
+
+              {request.note && (
+                <div className="bg-admin-danger/5 border border-admin-danger/20 rounded-lg p-3">
+                  <h4 className="text-xs font-semibold text-admin-danger flex items-center gap-1"><AlertTriangle size={12} /> Qeyd</h4>
+                  <p className="text-xs mt-1">{request.note}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Reject mode */}
+          {rejectMode && (
+            <div className="space-y-2 animate-fade-in border-t border-border pt-3">
+              <label className="text-sm font-medium text-admin-danger">Rədd səbəbi:</label>
+              <Textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Rədd səbəbini yazın..." rows={2} />
+              <div className="flex gap-2">
+                <Button size="sm" className="bg-admin-danger text-primary-foreground hover:bg-admin-danger/90" onClick={() => {
+                  if (!rejectReason.trim()) { toast({ title: "Səbəb yazın", variant: "destructive" }); return; }
+                  onReject(request.id, rejectReason);
+                  setRejectMode(false); setRejectReason("");
+                }}><X size={14} className="mr-1" /> Rədd et</Button>
+                <Button size="sm" variant="outline" onClick={() => { setRejectMode(false); setRejectReason(""); }}>Ləğv</Button>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          {!rejectMode && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-border">
+              {request.status === "yeni" && (
+                <>
+                  <Button onClick={() => onApprove(request.id)} className="flex-1 bg-admin-success text-primary-foreground hover:bg-admin-success/90">
+                    <Check size={14} className="mr-1" /> Təsdiqlə
+                  </Button>
+                  <Button onClick={() => setRejectMode(true)} variant="outline" className="flex-1 text-admin-danger border-admin-danger/30">
+                    <X size={14} className="mr-1" /> Rədd et
+                  </Button>
+                </>
+              )}
+              {(request.status === "təsdiqləndi" && request.paymentStatus === "gözləyir") && (
+                <div className="w-full space-y-2">
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <label className="text-xs font-medium">Ödəniş metodu</label>
+                      <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                        <SelectTrigger className="mt-1 h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Kart">Kart</SelectItem>
+                          <SelectItem value="Bank köçürməsi">Bank köçürməsi</SelectItem>
+                          <SelectItem value="Nağd">Nağd</SelectItem>
+                          <SelectItem value="Balans">Balans</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={() => onConfirmPayment(request.id, paymentMethod)} className="bg-admin-accent text-accent-foreground hover:bg-admin-accent/90 h-8">
+                      <CreditCard size={14} className="mr-1" /> Ödənişi təsdiqlə
+                    </Button>
+                  </div>
+                </div>
+              )}
+              {request.status === "ödənilib" && (
+                <Button className="flex-1 bg-admin-accent text-accent-foreground hover:bg-admin-accent/90" onClick={() => {
+                  toast({ title: "🚀 Reklam aktivləşdirildi", description: `#${request.id} — ${request.durationDays} gün müddətinə` });
+                  onClose();
+                }}>
+                  <Send size={14} className="mr-1" /> Reklamı aktivləşdir
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // === MAIN PAGE ===
 export default function ReklamlarPage() {
   const [slots, setSlots] = useState(bannerSlots);
   const [banners, setBanners] = useState(mockBanners);
-  const [activeTab, setActiveTab] = useState<"banners" | "slots" | "pricing">("banners");
+  const [requests, setRequests] = useState(mockRequests);
+  const [activeTab, setActiveTab] = useState<"banners" | "slots" | "pricing" | "requests">("banners");
   const [editSlot, setEditSlot] = useState<BannerSlot | null>(null);
   const [bannerForm, setBannerForm] = useState(false);
   const [editBanner, setEditBanner] = useState<Banner | null>(null);
   const [aiDialog, setAiDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<AdRequest | null>(null);
 
   const totalRevenue = banners.reduce((s, b) => s + b.revenue, 0);
   const totalImpressions = banners.reduce((s, b) => s + b.impressions, 0);
@@ -588,6 +866,27 @@ export default function ReklamlarPage() {
     toast({ title: "🗑️ Banner silindi" });
   };
 
+  const handleApproveRequest = (id: number) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "təsdiqləndi" as const } : r));
+    setSelectedRequest(null);
+    toast({ title: "✅ Sorğu təsdiqləndi", description: `#${id} — ödəniş gözlənilir` });
+  };
+
+  const handleRejectRequest = (id: number, reason: string) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "rədd" as const, paymentStatus: "ləğv" as const, note: reason } : r));
+    setSelectedRequest(null);
+    toast({ title: "❌ Sorğu rədd edildi", description: `#${id}: ${reason}` });
+  };
+
+  const handleConfirmPayment = (id: number, method: string) => {
+    setRequests(prev => prev.map(r => r.id === id ? { ...r, status: "ödənilib" as const, paymentStatus: "ödənilib" as const, paymentMethod: method, paymentDate: new Date().toISOString().split("T")[0] } : r));
+    setSelectedRequest(null);
+    toast({ title: "💰 Ödəniş təsdiqləndi", description: `#${id} — ${method}` });
+  };
+
+  const newRequestCount = requests.filter(r => r.status === "yeni").length;
+  const pendingPaymentCount = requests.filter(r => r.status === "təsdiqləndi" && r.paymentStatus === "gözləyir").length;
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
@@ -627,6 +926,7 @@ export default function ReklamlarPage() {
       {/* Tabs */}
       <div className="flex gap-1 border-b border-border">
         {([
+          { id: "requests", label: "Sorğular", count: requests.length },
           { id: "banners", label: "Bannerlər", count: banners.length },
           { id: "slots", label: "Banner Yerləri", count: slots.length },
           { id: "pricing", label: "Qiymət Siyahısı" },
@@ -641,6 +941,102 @@ export default function ReklamlarPage() {
           </button>
         ))}
       </div>
+
+      {/* New request alert */}
+      {newRequestCount > 0 && activeTab !== "requests" && (
+        <div className="bg-admin-accent/5 border border-admin-accent/20 rounded-lg px-4 py-2.5 flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-full bg-admin-accent/10 flex items-center justify-center">
+              <FileText size={14} className="text-admin-accent" />
+            </span>
+            <div>
+              <p className="text-xs font-medium">{newRequestCount} yeni reklam sorğusu</p>
+              {pendingPaymentCount > 0 && <p className="text-[10px] text-muted-foreground">{pendingPaymentCount} ödəniş gözləyir</p>}
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setActiveTab("requests")} className="text-[10px] h-7 border-admin-accent/30 text-admin-accent">
+            Sorğulara keç
+          </Button>
+        </div>
+      )}
+
+      {/* === REQUESTS TAB === */}
+      {activeTab === "requests" && (
+        <div className="space-y-3">
+          {/* Request stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {[
+              { label: "Ümumi", value: requests.length, color: "text-foreground" },
+              { label: "Yeni", value: newRequestCount, color: "text-amber-500" },
+              { label: "Təsdiqləndi", value: requests.filter(r => r.status === "təsdiqləndi").length, color: "text-blue-500" },
+              { label: "Ödənilib", value: requests.filter(r => r.status === "ödənilib").length, color: "text-emerald-500" },
+              { label: "Rədd", value: requests.filter(r => r.status === "rədd").length, color: "text-red-500" },
+            ].map(s => (
+              <div key={s.label} className="bg-card rounded-lg border border-border p-3 text-center">
+                <p className={cn("text-xl font-bold", s.color)}>{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Request cards */}
+          <div className="space-y-2">
+            {requests.map(req => {
+              const slot = slots.find(s => s.id === req.slotId);
+              const st = requestStatusConfig[req.status];
+              const ps = paymentStatusConfig[req.paymentStatus];
+              const dur = durationOptions.find(d => d.id === req.duration);
+              return (
+                <div key={req.id} onClick={() => setSelectedRequest(req)}
+                  className={cn(
+                    "bg-card rounded-lg border border-border p-4 cursor-pointer hover:shadow-md transition-all",
+                    req.status === "yeni" && "border-admin-accent/30 bg-admin-accent/[0.02]"
+                  )}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground">#{req.id}</span>
+                        <span className="font-medium text-sm">{req.company}</span>
+                        <span className={cn("text-[10px] px-1.5 py-0.5 rounded font-medium", st.class)}>{st.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">{req.description}</p>
+                      <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1"><User size={10} /> {req.advertiser}</span>
+                        <span className="flex items-center gap-1"><Layout size={10} /> {slot?.name || req.slotId}</span>
+                        <span className="flex items-center gap-1"><CalendarDays size={10} /> {dur?.label}</span>
+                        <span className="flex items-center gap-1"><Clock size={10} /> {req.createdAt.split(" ")[0]}</span>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-lg font-bold text-admin-accent">{req.totalPrice} ₼</p>
+                      <div className="flex items-center gap-1 justify-end mt-1">
+                        <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-medium", ps.class)}>{ps.label}</span>
+                      </div>
+                      {req.status === "yeni" && (
+                        <div className="flex gap-1 mt-2" onClick={e => e.stopPropagation()}>
+                          <Button size="sm" className="h-6 text-[10px] bg-admin-success text-primary-foreground hover:bg-admin-success/90 px-2" onClick={() => handleApproveRequest(req.id)}>
+                            <Check size={10} className="mr-0.5" /> Təsdiqlə
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-6 text-[10px] text-admin-danger border-admin-danger/30 px-2" onClick={() => {
+                            handleRejectRequest(req.id, "Admin tərəfindən rədd edildi");
+                          }}>
+                            <X size={10} />
+                          </Button>
+                        </div>
+                      )}
+                      {(req.status === "təsdiqləndi" && req.paymentStatus === "gözləyir") && (
+                        <Button size="sm" className="h-6 text-[10px] bg-admin-accent text-accent-foreground hover:bg-admin-accent/90 px-2 mt-2" onClick={e => { e.stopPropagation(); setSelectedRequest(req); }}>
+                          <CreditCard size={10} className="mr-0.5" /> Ödəniş
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* === BANNERS TAB === */}
       {activeTab === "banners" && (
@@ -816,6 +1212,7 @@ export default function ReklamlarPage() {
       <SlotEditDialog slot={editSlot} open={!!editSlot} onClose={() => setEditSlot(null)} onSave={handleSlotSave} />
       <BannerFormDialog banner={editBanner} slots={slots} open={bannerForm} onClose={() => { setBannerForm(false); setEditBanner(null); }} onSave={handleBannerCreate} />
       <AiBannerDialog slots={slots} open={aiDialog} onClose={() => setAiDialog(false)} onGenerate={handleAiGenerate} />
+      <RequestDetailDialog request={selectedRequest} slots={slots} open={!!selectedRequest} onClose={() => setSelectedRequest(null)} onApprove={handleApproveRequest} onReject={handleRejectRequest} onConfirmPayment={handleConfirmPayment} />
     </div>
   );
 }

@@ -546,7 +546,40 @@ export default function IstifadecilerPage() {
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDirState] = useState<SortDir>(null);
+  const [aiScanning, setAiScanning] = useState(false);
+  const [aiScanDone, setAiScanDone] = useState(false);
+  const [scanProgress, setScanProgress] = useState(0);
+  const [showRiskPanel, setShowRiskPanel] = useState(false);
   const perPage = 10;
+
+  const handleAiScan = () => {
+    setAiScanning(true);
+    setScanProgress(0);
+    const interval = setInterval(() => {
+      setScanProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setAiScanning(false);
+          setAiScanDone(true);
+          setShowRiskPanel(true);
+          setUsers(prev => prev.map(u => ({ ...u, riskProfile: analyzeUserRisk(u) })));
+          const analyzed = users.map(u => analyzeUserRisk(u));
+          const critical = analyzed.filter(r => r.riskLevel === "kritik").length;
+          const high = analyzed.filter(r => r.riskLevel === "yüksək").length;
+          toast({
+            title: "🤖 AI Risk Analizi tamamlandı",
+            description: `${users.length} istifadəçi analiz edildi — ${critical} kritik, ${high} yüksək riskli`,
+          });
+          return 0;
+        }
+        return prev + Math.random() * 12 + 3;
+      });
+    }, 200);
+  };
+
+  const riskyUsers = users
+    .filter(u => u.riskProfile && u.riskProfile.riskScore >= 25)
+    .sort((a, b) => (b.riskProfile?.riskScore || 0) - (a.riskProfile?.riskScore || 0));
 
   const handleSort = (key: string) => {
     if (sortKey === key) {

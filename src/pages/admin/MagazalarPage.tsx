@@ -337,6 +337,11 @@ function ShopDetailDialog({ shop, open, onClose, onApprove, onReject, onBlock, o
               </Button>
             )}
             <Button variant="outline" onClick={() => onEdit(shop)}><Edit size={14} className="mr-1" /> Redaktə et</Button>
+            {shop.plan !== "Premium" && (
+              <Button variant="outline" className="border-admin-accent/30 text-admin-accent hover:bg-admin-accent/5" onClick={() => onUpgrade(shop)}>
+                <Crown size={14} className="mr-1" /> Paket yüksəlt
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
